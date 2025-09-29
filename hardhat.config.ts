@@ -1,6 +1,8 @@
-import type { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-import { configVariable } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -13,18 +15,15 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    // Mạng local giả lập
-    hardhat: {
-      type: "edr-simulated",
-      chainType: "l1",
-    },
-    // Mạng testnet Sepolia
+    hardhat: {},
+
     sepolia: {
-      type: "http",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-      chainType: "l1",
+      url: process.env.SEPOLIA_RPC_URL || "",
+      accounts: process.env.SEPOLIA_PRIVATE_KEY ? [process.env.SEPOLIA_PRIVATE_KEY] : [],
     },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
   },
 };
 

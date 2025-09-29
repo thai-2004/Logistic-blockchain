@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Blockchain logistics project with Hardhat, Express, and Ethers.js",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
@@ -23,24 +22,19 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "^4.0.1",
-    "@nomicfoundation/hardhat-ignition": "^3.0.3",
-    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@types/chai": "^4.3.20",
-    "@types/chai-as-promised": "^8.0.2",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.18.6",
-    "chai": "^5.3.3",
-    "ethers": "^6.15.0",
-    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
-    "hardhat": "^3.0.6",
-    "mocha": "^11.7.2",
-    "typescript": "~5.8.0"
+    "@types/node": "^20.14.10",
+    "chai": "^4.3.10",
+    "hardhat": "^2.22.6",
+    "mocha": "^10.7.3",
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "mongoose": "^8.18.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.0",
     "qrcode": "^1.5.4"
   }
 }
