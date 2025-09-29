@@ -4,13 +4,14 @@
   "description": "Blockchain logistics project with Hardhat, Express, and Ethers.js",
   "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "hardhat compile && node scripts/copy-abi.js",
     "test": "hardhat test",
     "node": "hardhat node",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
     "server": "node backend/index.js",
-    "start": "npm run server"
+    "start": "node backend/index.js"
+    
   },
   "keywords": [
     "blockchain",

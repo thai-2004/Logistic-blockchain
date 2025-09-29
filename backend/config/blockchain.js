@@ -1,13 +1,19 @@
+import dotenv from "dotenv";
 import { ethers } from "ethers";
-import abi from "../../artifacts/contracts/ShipmentTracking.sol/ShipmentTracking.json" assert { type: "json" };
+import abi from "../abi/ShipmentTracking.json" with { type: "json" };
 
-const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+dotenv.config();
 
-const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS,
-  abi.abi,
-  wallet
-);
+let { RPC_URL, PRIVATE_KEY, CONTRACT_ADDRESS } = process.env;
 
-export default contract;
+if (!RPC_URL) throw new Error("❌ RPC_URL is missing in .env");
+if (!PRIVATE_KEY) throw new Error("❌ PRIVATE_KEY is missing in .env");
+if (!PRIVATE_KEY.startsWith("0x")) PRIVATE_KEY = "0x" + PRIVATE_KEY.trim();
+if (PRIVATE_KEY.length !== 66) throw new Error(`❌ PRIVATE_KEY length invalid (${PRIVATE_KEY.length}), expected 66`);
+if (!CONTRACT_ADDRESS) throw new Error("❌ CONTRACT_ADDRESS is missing in .env");
+
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, abi.abi, wallet);
+
+export { provider, wallet, contract };

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Shipment from "../models/shipmentModel.js";
 
 const shipmentSchema = new mongoose.Schema(
   {

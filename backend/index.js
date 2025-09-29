@@ -5,6 +5,9 @@ import shipmentRoutes from "./routes/shipmentRoutes.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
+
+console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
+
 const app = express();
 app.use(express.json());
 
@@ -15,4 +18,7 @@ app.use("/api/shipments", shipmentRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server chạy trên: http://localhost:${PORT}`));
+
+
+

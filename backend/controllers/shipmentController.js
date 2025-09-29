@@ -1,5 +1,4 @@
-import Shipment from "../models/shipmentModel.js";
-import contract from "../config/blockchain.js";
+import { contract } from "../config/blockchain.js";
 
 export const createShipment = async (req, res, next) => {
   try {
