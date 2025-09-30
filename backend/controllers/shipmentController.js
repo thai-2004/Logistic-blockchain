@@ -1,4 +1,15 @@
 import { contract } from "../config/blockchain.js";
+import Shipment from "../models/shipmentModel.js";
+
+export const getShipmentCount = async (req, res) => {
+  try {
+    const count = await contract.getShipmentCount();
+    res.json({ count: Number(count) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Blockchain error" });
+  }
+};
 
 export const createShipment = async (req, res, next) => {
   try {
@@ -43,3 +54,5 @@ export const getShipment = async (req, res, next) => {
     next(err);
   }
 };
+
+
