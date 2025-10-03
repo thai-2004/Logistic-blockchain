@@ -7,7 +7,7 @@ async function main() {
   const contract = await ShipmentTracking.deploy();
   await contract.waitForDeployment();
 
-  console.log("✅ ShipmentTracking deployed to:", await contract.getAddress());
+  console.log("ShipmentTracking deployed to:", await contract.getAddress());
 }
 
 main().catch((error) => {

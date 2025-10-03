@@ -12,7 +12,7 @@ async function main() {
   await contract.waitForDeployment();
 
   const contractAddress = await contract.getAddress();
-  console.log("✅ ShipmentTracking deployed to:", contractAddress);
+  console.log("ShipmentTracking deployed to:", contractAddress);
 
   // --- Update .env file ---
   const envPath = path.resolve(".env");
@@ -34,7 +34,7 @@ async function main() {
   }
 
   fs.writeFileSync(envPath, envContent, "utf8");
-  console.log("📝 Updated .env with CONTRACT_ADDRESS:", contractAddress);
+  console.log("Updated .env with CONTRACT_ADDRESS:", contractAddress);
 }
 
 main().catch((error) => {

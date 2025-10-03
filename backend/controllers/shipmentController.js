@@ -1,3 +1,4 @@
+import { error } from "console";
 import { contract } from "../config/blockchain.js";
 import Shipment from "../models/shipmentModel.js";
 
@@ -55,4 +56,41 @@ export const getShipment = async (req, res, next) => {
   }
 };
 
+export const updateShipment = async (req, res) => {
+  try {
+    const { id } = req.params;       // ví dụ "1"
+    const { status } = req.body;     // ví dụ { status: "Delivered" }
+
+    const shipment = await Shipment.findOneAndUpdate(
+      { shipmentId: id.toString() },    // tìm theo shipmentId
+      { status },
+      { new: true }
+    );
+
+    if (!shipment) {
+      return res.status(404).json({ message: "Shipment not found" });
+    }
+
+    res.json(shipment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+export const deleteeShipment = async (req, res) => {
+  try{
+    const {id} = req.params;
+    // Chỉ xóa trong DB không xóa trong blockchaing
+    const result = await Shipment.findByIdAndDelete(id);
+
+    if(!result){
+      return res.status(400).json({message: "Not found in DB"});
+    }
+  }catch{
+    console.error(err);
+    res.status(500).json({message : "Block chain err", error: error.message});
+  }
+}
 

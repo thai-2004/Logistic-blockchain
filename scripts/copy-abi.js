@@ -13,9 +13,9 @@ if (!fs.existsSync(destDir)) {
 }
 
 if (!fs.existsSync(source)) {
-  console.error("❌ ABI not found at:", source);
+  console.error("ABI not found at:", source);
   process.exit(1);
 }
 
 fs.copyFileSync(source, dest);
-console.log("✅ ABI copied to backend/abi/ShipmentTracking.json");
+console.log("ABI copied to backend/abi/ShipmentTracking.json");
