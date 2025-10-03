@@ -2,6 +2,7 @@ import { error } from "console";
 import { contract } from "../config/blockchain.js";
 import Shipment from "../models/shipmentModel.js";
 
+
 export const getShipmentCount = async (req, res) => {
   try {
     const count = await contract.getShipmentCount();
@@ -83,14 +84,16 @@ export const deleteeShipment = async (req, res) => {
   try{
     const {id} = req.params;
     // Chỉ xóa trong DB không xóa trong blockchaing
-    const result = await Shipment.findByIdAndDelete(id);
+    const result = await Shipment.findOneAndDelete({ shipmentId: id.toString() });
+
 
     if(!result){
       return res.status(400).json({message: "Not found in DB"});
     }
-  }catch{
+  }catch (err){
     console.error(err);
     res.status(500).json({message : "Block chain err", error: error.message});
   }
-}
+};
+
 

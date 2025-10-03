@@ -1,5 +1,6 @@
 import express from "express";
-import { createShipment, getShipment, getShipmentCount, updateShipment, deleteeShipment } from "../controllers/shipmentController.js";
+import { createShipment, getShipment, getShipmentCount, updateShipment, deleteeShipment} from "../controllers/shipmentController.js";
+import { createAccount } from "../controllers/accountController.js";
 import validateShipment from "../validators/shipment.validator.js";
 
 const router = express.Router();
@@ -17,4 +18,9 @@ router.put("/:id/status", updateShipment);
 
 // Router delete shipment theo id
 router.delete("/id", deleteeShipment);
+
+// Router tạo tài khoản 
+router.post("/createAccount", createAccount);
+
+
 export default router;

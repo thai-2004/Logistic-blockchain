@@ -13,6 +13,8 @@ app.use(express.json());
 
 connectDB();
 
+
+
 app.use("/api/shipments", shipmentRoutes);
 
 app.use(errorHandler);
