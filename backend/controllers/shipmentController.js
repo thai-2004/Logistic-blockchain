@@ -6,10 +6,54 @@ import Shipment from "../models/shipmentModel.js";
 export const getShipmentCount = async (req, res) => {
   try {
     const count = await contract.getShipmentCount();
-    res.json({ count: Number(count) });
+    res.json({ 
+      success: true,
+      count: Number(count) 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Blockchain error" });
+    console.error("Get shipment count error:", error);
+    res.status(500).json({ 
+      error: "Blockchain error",
+      message: error.message 
+    });
+  }
+};
+
+export const getAllShipments = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, customer } = req.query;
+    
+    // Build filter object
+    const filter = {};
+    if (status) filter.status = status;
+    if (customer) filter.customer = { $regex: customer, $options: 'i' };
+
+    // Calculate pagination
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const shipments = await Shipment.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Shipment.countDocuments(filter);
+
+    res.json({
+      success: true,
+      shipments,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(total / Number(limit)),
+        totalItems: total,
+        itemsPerPage: Number(limit)
+      }
+    });
+  } catch (error) {
+    console.error("Get all shipments error:", error);
+    res.status(500).json({
+      error: "Server error",
+      message: error.message
+    });
   }
 };
 
@@ -17,9 +61,18 @@ export const createShipment = async (req, res, next) => {
   try {
     const { productName, origin, destination } = req.body;
 
+    // Validate required fields
+    if (!productName || !origin || !destination) {
+      return res.status(400).json({ 
+        error: "Missing required fields: productName, origin, destination" 
+      });
+    }
+
+    // Create shipment on blockchain
     const tx = await contract.createShipment(productName, origin, destination);
     const receipt = await tx.wait();
 
+    // Parse event from transaction receipt
     const event = receipt.logs
       .map((log) => {
         try {
@@ -30,8 +83,15 @@ export const createShipment = async (req, res, next) => {
       })
       .find((e) => e && e.name === "ShipmentCreated");
 
-    const shipmentId = event?.args?.id.toString();
+    if (!event) {
+      return res.status(500).json({ 
+        error: "Failed to parse ShipmentCreated event" 
+      });
+    }
 
+    const shipmentId = Number(event.args.id);
+
+    // Create shipment in database
     const shipment = await Shipment.create({
       shipmentId,
       productName,
@@ -39,60 +99,136 @@ export const createShipment = async (req, res, next) => {
       destination,
       status: "Created",
       customer: receipt.from,
+      blockchainTxHash: receipt.hash
     });
 
-    res.status(201).json({ ok: true, shipment });
+    res.status(201).json({ 
+      success: true, 
+      message: "Shipment created successfully",
+      shipment 
+    });
   } catch (err) {
+    console.error("Create shipment error:", err);
     next(err);
   }
 };
 
 export const getShipment = async (req, res, next) => {
   try {
-    const shipment = await Shipment.findOne({ shipmentId: req.params.id });
-    if (!shipment) return res.status(404).json({ error: "Not found" });
-    res.json(shipment);
+    const { id } = req.params;
+    
+    // Validate shipment ID
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({ 
+        error: "Invalid shipment ID" 
+      });
+    }
+
+    const shipment = await Shipment.findOne({ shipmentId: Number(id) });
+    
+    if (!shipment) {
+      return res.status(404).json({ 
+        error: "Shipment not found",
+        shipmentId: id 
+      });
+    }
+    
+    res.json({
+      success: true,
+      shipment
+    });
   } catch (err) {
+    console.error("Get shipment error:", err);
     next(err);
   }
 };
 
 export const updateShipment = async (req, res) => {
   try {
-    const { id } = req.params;       // ví dụ "1"
-    const { status } = req.body;     // ví dụ { status: "Delivered" }
+    const { id } = req.params;
+    const { status, driverName, vehiclePlate, manager } = req.body;
+
+    // Validate shipment ID
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({ 
+        error: "Invalid shipment ID" 
+      });
+    }
+
+    // Validate status if provided
+    if (status && !['Created', 'In Transit', 'Delivered', 'Cancelled'].includes(status)) {
+      return res.status(400).json({ 
+        error: "Invalid status. Must be one of: Created, In Transit, Delivered, Cancelled" 
+      });
+    }
+
+    // Prepare update object
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (driverName) updateData.driverName = driverName;
+    if (vehiclePlate) updateData.vehiclePlate = vehiclePlate;
+    if (manager) updateData.manager = manager;
 
     const shipment = await Shipment.findOneAndUpdate(
-      { shipmentId: id.toString() },    // tìm theo shipmentId
-      { status },
-      { new: true }
+      { shipmentId: Number(id) },
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!shipment) {
-      return res.status(404).json({ message: "Shipment not found" });
+      return res.status(404).json({ 
+        error: "Shipment not found",
+        shipmentId: id 
+      });
     }
 
-    res.json(shipment);
+    res.json({
+      success: true,
+      message: "Shipment updated successfully",
+      shipment
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Update shipment error:", error);
+    res.status(500).json({ 
+      error: "Server error",
+      message: error.message 
+    });
   }
 };
 
 
 export const deleteeShipment = async (req, res) => {
-  try{
-    const {id} = req.params;
-    // Chỉ xóa trong DB không xóa trong blockchaing
-    const result = await Shipment.findOneAndDelete({ shipmentId: id.toString() });
+  try {
+    const { id } = req.params;
 
-
-    if(!result){
-      return res.status(400).json({message: "Not found in DB"});
+    // Validate shipment ID
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({ 
+        error: "Invalid shipment ID" 
+      });
     }
-  }catch (err){
-    console.error(err);
-    res.status(500).json({message : "Block chain err", error: error.message});
+
+    // Only delete from DB, not from blockchain
+    const result = await Shipment.findOneAndDelete({ shipmentId: Number(id) });
+
+    if (!result) {
+      return res.status(404).json({
+        error: "Shipment not found",
+        shipmentId: id
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Shipment deleted successfully",
+      shipment: result
+    });
+  } catch (err) {
+    console.error("Delete shipment error:", err);
+    res.status(500).json({
+      error: "Server error",
+      message: err.message
+    });
   }
 };
 

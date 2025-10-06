@@ -1,10 +1,21 @@
 import express from "express";
-import { createShipment, getShipment, getShipmentCount, updateShipment, deleteeShipment} from "../controllers/shipmentController.js";
+import { 
+  createShipment, 
+  getShipment, 
+  getAllShipments,
+  getShipmentCount, 
+  updateShipment, 
+  deleteeShipment
+} from "../controllers/shipmentController.js";
 import { createAccount } from "../controllers/accountController.js";
 import validateShipment from "../validators/shipment.validator.js";
 
 const router = express.Router();
 
+// Route lấy tất cả shipments với pagination và filter
+router.get("/", getAllShipments);
+
+// Route lấy số lượng shipments từ blockchain
 router.get("/count", getShipmentCount);
 
 // Route tạo shipment
@@ -17,10 +28,9 @@ router.get("/:id", getShipment);
 router.put("/:id/status", updateShipment);
 
 // Router delete shipment theo id
-router.delete("/id", deleteeShipment);
+router.delete("/:id", deleteeShipment);
 
 // Router tạo tài khoản 
 router.post("/createAccount", createAccount);
-
 
 export default router;
