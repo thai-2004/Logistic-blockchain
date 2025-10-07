@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
 import shipmentRoutes from "./routes/shipmentRoutes.js";
+import accountRoutes from "./routes/accountRoutes.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -42,6 +43,7 @@ connectDB();
 
 // Routes
 app.use("/api/shipments", shipmentRoutes);
+app.use("/api/accounts", accountRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -56,13 +58,13 @@ app.use(errorHandler);
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down gracefully...');
+  console.log('\n Shutting down gracefully...');
   process.exit(0);
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on: http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`Server running on: http://localhost:${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
 
