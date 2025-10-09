@@ -1,6 +1,6 @@
 // frontend/src/components/Dashboard.jsx
 import React, { useState } from 'react';
-import { useShipmentStats } from '../hooks/useShipments';
+import { useShipmentStats } from '../hook/useShipments';
 import ShipmentList from './ShipmentList';
 import CreateShipment from './CreateShipment';
 import UpdateShipment from './UpdateShipment';

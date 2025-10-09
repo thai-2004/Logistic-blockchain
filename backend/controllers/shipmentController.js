@@ -91,6 +91,21 @@ export const createShipment = async (req, res, next) => {
 
     const shipmentId = Number(event.args.id);
 
+    // Check if shipmentId already exists in database
+    const existingShipment = await Shipment.findOne({ shipmentId });
+    if (existingShipment) {
+      console.warn(`Shipment with ID ${shipmentId} already exists in database`);
+      return res.status(409).json({
+        error: "Shipment already exists",
+        message: `Shipment with ID ${shipmentId} already exists in database`,
+        existingShipment: {
+          shipmentId: existingShipment.shipmentId,
+          status: existingShipment.status,
+          createdAt: existingShipment.createdAt
+        }
+      });
+    }
+
     // Create shipment in database
     const shipment = await Shipment.create({
       shipmentId,
@@ -109,6 +124,32 @@ export const createShipment = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Create shipment error:", err);
+    
+    // Handle duplicate key error specifically
+    if (err.code === 11000) {
+      console.error(`Duplicate key error for shipmentId ${shipmentId}:`, err.keyPattern);
+      
+      // Try to find the existing shipment
+      const existingShipment = await Shipment.findOne({ shipmentId });
+      if (existingShipment) {
+        return res.status(409).json({
+          error: "Duplicate shipment ID",
+          message: "A shipment with this ID already exists",
+          existingShipment: {
+            shipmentId: existingShipment.shipmentId,
+            status: existingShipment.status,
+            createdAt: existingShipment.createdAt
+          }
+        });
+      }
+      
+      return res.status(409).json({
+        error: "Duplicate shipment ID",
+        message: "A shipment with this ID already exists",
+        details: err.keyPattern
+      });
+    }
+    
     next(err);
   }
 };
@@ -461,6 +502,92 @@ export const searchShipments = async (req, res) => {
     });
   } catch (error) {
     console.error("Search shipments error:", error);
+    res.status(500).json({
+      error: "Server error",
+      message: error.message
+    });
+  }
+};
+
+// Cleanup duplicate shipments
+export const cleanupDuplicates = async (req, res) => {
+  try {
+    console.log('🧹 Starting duplicate cleanup...');
+    
+    // Find all shipments
+    const allShipments = await Shipment.find({});
+    console.log(`📊 Total shipments in database: ${allShipments.length}`);
+    
+    // Group by shipmentId to find duplicates
+    const shipmentIdGroups = {};
+    allShipments.forEach(shipment => {
+      const id = shipment.shipmentId;
+      if (!shipmentIdGroups[id]) {
+        shipmentIdGroups[id] = [];
+      }
+      shipmentIdGroups[id].push(shipment);
+    });
+    
+    // Find duplicates
+    const duplicates = Object.keys(shipmentIdGroups).filter(id => shipmentIdGroups[id].length > 1);
+    
+    if (duplicates.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No duplicate records found!',
+        totalShipments: allShipments.length,
+        duplicatesFound: 0,
+        recordsDeleted: 0
+      });
+    }
+    
+    console.log(`❌ Found ${duplicates.length} duplicate shipmentId(s)`);
+    
+    let totalDeleted = 0;
+    const duplicateDetails = [];
+    
+    for (const duplicateId of duplicates) {
+      const records = shipmentIdGroups[duplicateId];
+      console.log(`\n📦 Processing ShipmentId ${duplicateId} (${records.length} records):`);
+      
+      // Sort by creation date (keep the oldest one)
+      records.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      
+      const keepRecord = records[0]; // Keep the first (oldest) record
+      const deleteRecords = records.slice(1); // Delete the rest
+      
+      console.log(`  ✅ Keeping record: ${keepRecord._id} (created: ${keepRecord.createdAt})`);
+      
+      const deletedIds = [];
+      // Delete duplicate records
+      for (const record of deleteRecords) {
+        console.log(`  🗑️  Deleting record: ${record._id} (created: ${record.createdAt})`);
+        await Shipment.findByIdAndDelete(record._id);
+        deletedIds.push(record._id);
+        totalDeleted++;
+      }
+      
+      duplicateDetails.push({
+        shipmentId: duplicateId,
+        totalRecords: records.length,
+        keptRecord: keepRecord._id,
+        deletedRecords: deletedIds
+      });
+    }
+    
+    console.log(`\n🎉 Cleanup completed! Deleted ${totalDeleted} duplicate records.`);
+    
+    res.json({
+      success: true,
+      message: `Cleanup completed! Deleted ${totalDeleted} duplicate records.`,
+      totalShipments: allShipments.length,
+      duplicatesFound: duplicates.length,
+      recordsDeleted: totalDeleted,
+      duplicateDetails
+    });
+    
+  } catch (error) {
+    console.error('❌ Error during cleanup:', error);
     res.status(500).json({
       error: "Server error",
       message: error.message

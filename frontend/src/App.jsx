@@ -18,7 +18,9 @@ function App() {
         <div className="navbar-brand">
           <div className="logo">
             <span className="logo-icon">🚛</span>
-            <h1>Logistics Blockchain</h1>
+            <a href="/" onClick={e => { e.preventDefault(); window.location.href = '/'; }} className="app-title-link">
+              Logistics Blockchain
+            </a>
           </div>
           <div className="navbar-subtitle">
             <span className="blockchain-badge">🔗 Blockchain Powered</span>

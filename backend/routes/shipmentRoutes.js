@@ -10,7 +10,8 @@ import {
   getShipmentsByCustomer,
   getShipmentsByStatus,
   searchShipments,
-  getShipmentTracking
+  getShipmentTracking,
+  cleanupDuplicates
 } from "../controllers/shipmentController.js";
 import { createAccount } from "../controllers/accountController.js";
 import {
@@ -64,5 +65,8 @@ router.delete("/:id", validateDeleteShipment, deleteShipment);
 
 // Router tạo tài khoản 
 router.post("/createAccount", createAccount);
+
+// Route cleanup duplicate shipments
+router.post("/cleanup-duplicates", cleanupDuplicates);
 
 export default router;
