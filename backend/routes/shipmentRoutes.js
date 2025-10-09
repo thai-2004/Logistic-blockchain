@@ -5,30 +5,62 @@ import {
   getAllShipments,
   getShipmentCount, 
   updateShipment, 
-  deleteeShipment
+  deleteShipment,
+  getShipmentStats,
+  getShipmentsByCustomer,
+  getShipmentsByStatus,
+  searchShipments,
+  getShipmentTracking
 } from "../controllers/shipmentController.js";
 import { createAccount } from "../controllers/accountController.js";
-import validateShipment from "../validators/shipment.validator.js";
+import {
+  validateCreateShipment,
+  validateGetShipment,
+  validateUpdateShipment,
+  validateDeleteShipment,
+  validateGetShipmentsByCustomer,
+  validateGetShipmentsByStatus,
+  validateSearchShipments,
+  validateGetShipmentStats,
+  validateGetShipmentTracking,
+  validateGetAllShipments,
+  default as validateShipment
+} from "../validators/shipment.validator.js";
 
 const router = express.Router();
 
 // Route lấy tất cả shipments với pagination và filter
-router.get("/", getAllShipments);
+router.get("/", validateGetAllShipments, getAllShipments);
 
 // Route lấy số lượng shipments từ blockchain
 router.get("/count", getShipmentCount);
 
+// Route lấy thống kê shipments
+router.get("/stats", validateGetShipmentStats, getShipmentStats);
+
+// Route tìm kiếm shipments nâng cao
+router.get("/search", validateSearchShipments, searchShipments);
+
+// Route lấy shipments theo customer
+router.get("/customer/:customer", validateGetShipmentsByCustomer, getShipmentsByCustomer);
+
+// Route lấy shipments theo status
+router.get("/status/:status", validateGetShipmentsByStatus, getShipmentsByStatus);
+
+// Route tracking shipment với timeline
+router.get("/:id/tracking", validateGetShipmentTracking, getShipmentTracking);
+
 // Route tạo shipment
-router.post("/", validateShipment, createShipment);
+router.post("/", validateCreateShipment, createShipment);
 
 // Route lấy shipment theo id
-router.get("/:id", getShipment);
+router.get("/:id", validateGetShipment, getShipment);
 
 // Router sửa shipment theo id
-router.put("/:id/status", updateShipment);
+router.put("/:id/status", validateUpdateShipment, updateShipment);
 
 // Router delete shipment theo id
-router.delete("/:id", deleteeShipment);
+router.delete("/:id", validateDeleteShipment, deleteShipment);
 
 // Router tạo tài khoản 
 router.post("/createAccount", createAccount);
