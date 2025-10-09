@@ -1,6 +1,6 @@
 // frontend/src/components/TrackShipment.jsx
 import React, { useState } from 'react';
-import { useShipment } from '../hook/useShipments';
+// import { useShipment } from '../hooks/useShipments';
 import { shipmentAPI } from '../services/api';
 
 const TrackShipment = () => {
@@ -27,50 +27,100 @@ const TrackShipment = () => {
 
   return (
     <div className="track-shipment">
-      <h2>Track Shipment</h2>
-      <form onSubmit={handleTrack}>
-        <input
-          type="number"
-          placeholder="Enter Shipment ID"
-          value={shipmentId}
-          onChange={(e) => setShipmentId(e.target.value)}
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Tracking...' : 'Track'}
-        </button>
+      <div className="track-header">
+        <h2>🔍 Track Your Shipment</h2>
+        <p className="track-subtitle">Enter your shipment ID to view real-time tracking information</p>
+      </div>
+      
+      <form onSubmit={handleTrack} className="track-form">
+        <div className="input-group">
+          <input
+            type="number"
+            placeholder="Enter Shipment ID (e.g., 12345)"
+            value={shipmentId}
+            onChange={(e) => setShipmentId(e.target.value)}
+            required
+            className="track-input"
+          />
+          <button type="submit" disabled={loading} className="track-btn">
+            {loading ? (
+              <>
+                <span className="loading-spinner-small"></span>
+                Tracking...
+              </>
+            ) : (
+              <>
+                🔍 Track Shipment
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error">
+          <div className="error-icon">⚠️</div>
+          <div className="error-content">
+            <h4>Tracking Error</h4>
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
 
       {trackingData && (
         <div className="tracking-result">
-          <h3>Shipment Details</h3>
+          <div className="result-header">
+            <h3>📦 Shipment Details</h3>
+            <div className="status-badge status-{trackingData.shipment.status.toLowerCase().replace(' ', '-')}">
+              {trackingData.shipment.status}
+            </div>
+          </div>
+          
           <div className="shipment-info">
-            <p><strong>ID:</strong> {trackingData.shipment.shipmentId}</p>
-            <p><strong>Product:</strong> {trackingData.shipment.productName}</p>
-            <p><strong>Route:</strong> {trackingData.shipment.origin} → {trackingData.shipment.destination}</p>
-            <p><strong>Status:</strong> {trackingData.shipment.status}</p>
-            {trackingData.shipment.driverName && (
-              <p><strong>Driver:</strong> {trackingData.shipment.driverName}</p>
-            )}
-            {trackingData.shipment.vehiclePlate && (
-              <p><strong>Vehicle:</strong> {trackingData.shipment.vehiclePlate}</p>
-            )}
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">🆔 Shipment ID</span>
+                <span className="info-value">#{trackingData.shipment.shipmentId}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">📦 Product</span>
+                <span className="info-value">{trackingData.shipment.productName}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">🗺️ Route</span>
+                <span className="info-value">{trackingData.shipment.origin} → {trackingData.shipment.destination}</span>
+              </div>
+              {trackingData.shipment.driverName && (
+                <div className="info-item">
+                  <span className="info-label">👨‍💼 Driver</span>
+                  <span className="info-value">{trackingData.shipment.driverName}</span>
+                </div>
+              )}
+              {trackingData.shipment.vehiclePlate && (
+                <div className="info-item">
+                  <span className="info-label">🚛 Vehicle</span>
+                  <span className="info-value">{trackingData.shipment.vehiclePlate}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <h3>Timeline</h3>
-          <div className="timeline">
-            {trackingData.timeline.map((event, index) => (
-              <div key={index} className={`timeline-item ${event.completed ? 'completed' : 'pending'}`}>
-                <div className="timeline-marker"></div>
-                <div className="timeline-content">
-                  <h4>{event.status}</h4>
-                  <p>{event.description}</p>
-                  <small>{new Date(event.timestamp).toLocaleString()}</small>
+          <div className="timeline-section">
+            <h3>📅 Tracking Timeline</h3>
+            <div className="timeline">
+              {trackingData.timeline.map((event, index) => (
+                <div key={index} className={`timeline-item ${event.completed ? 'completed' : 'pending'}`}>
+                  <div className="timeline-marker">
+                    {event.completed ? '✅' : '⏳'}
+                  </div>
+                  <div className="timeline-content">
+                    <h4>{event.status}</h4>
+                    <p>{event.description}</p>
+                    <small>{new Date(event.timestamp).toLocaleString()}</small>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

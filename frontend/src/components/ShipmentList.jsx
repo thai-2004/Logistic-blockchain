@@ -1,8 +1,7 @@
-// frontend/src/components/ShipmentList.jsx
 import React, { useState } from 'react';
-import { useShipments } from '../hook/useShipments';
+import { useShipments } from '../hooks/useShipments';
 
-const ShipmentList = () => {
+const ShipmentList = ({ onUpdateShipment }) => {
   const [filters, setFilters] = useState({
     status: '',
     page: 1,
@@ -23,78 +22,143 @@ const ShipmentList = () => {
     setFilters(prev => ({ ...prev, page: newPage }));
   };
 
-  if (loading) return <div>Loading shipments...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>Loading shipments...</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="error-container">
+      <div className="error-icon">⚠️</div>
+      <p>Error: {error}</p>
+      <button onClick={() => refetch()} className="retry-btn">Retry</button>
+    </div>
+  );
 
   return (
     <div className="shipment-list">
-      <h2>Shipments</h2>
+      <div className="list-header">
+        <h2>Shipments</h2>
+        <button onClick={() => refetch()} className="refresh-btn">
+          🔄 Refresh
+        </button>
+      </div>
       
       {/* Filters */}
       <div className="filters">
-        <select 
-          value={filters.status} 
-          onChange={(e) => handleFilterChange('status', e.target.value)}
-        >
-          <option value="">All Status</option>
-          <option value="Created">Created</option>
-          <option value="In Transit">In Transit</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
+        <div className="filter-group">
+          <label>Status Filter:</label>
+          <select 
+            value={filters.status} 
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">All Status</option>
+            <option value="Created">Created</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
+          <label>Items per page:</label>
+          <select 
+            value={filters.limit} 
+            onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
+            className="filter-select"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
       </div>
 
       {/* Shipments Table */}
       <div className="shipments-table">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Product</th>
-              <th>Origin</th>
-              <th>Destination</th>
-              <th>Status</th>
-              <th>Customer</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shipments.map(shipment => (
-              <tr key={shipment._id}>
-                <td>{shipment.shipmentId}</td>
-                <td>{shipment.productName}</td>
-                <td>{shipment.origin}</td>
-                <td>{shipment.destination}</td>
-                <td>
-                  <span className={`status status-${shipment.status.toLowerCase().replace(' ', '-')}`}>
-                    {shipment.status}
-                  </span>
-                </td>
-                <td>{shipment.customer?.slice(0, 10)}...</td>
-                <td>{new Date(shipment.createdAt).toLocaleDateString()}</td>
+        {shipments.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📦</div>
+            <h3>No shipments found</h3>
+            <p>Create your first shipment to get started!</p>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Customer</th>
+                <th>Created</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {shipments.map(shipment => (
+                <tr key={shipment._id} className="shipment-row">
+                  <td className="shipment-id">#{shipment.shipmentId}</td>
+                  <td className="product-name">{shipment.productName}</td>
+                  <td className="origin">{shipment.origin}</td>
+                  <td className="destination">{shipment.destination}</td>
+                  <td>
+                    <span className={`status status-${shipment.status.toLowerCase().replace(' ', '-')}`}>
+                      {shipment.status}
+                    </span>
+                  </td>
+                  <td className="customer">{shipment.customer?.slice(0, 10)}...</td>
+                  <td className="created-date">{new Date(shipment.createdAt).toLocaleDateString()}</td>
+                  <td className="actions">
+                    <button className="action-btn view-btn" title="View Details">
+                      👁️
+                    </button>
+                    <button 
+                      className="action-btn edit-btn" 
+                      title="Edit"
+                      onClick={() => onUpdateShipment && onUpdateShipment(shipment.shipmentId)}
+                    >
+                      ✏️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Pagination */}
-      {pagination && (
+      {pagination && pagination.totalPages > 1 && (
         <div className="pagination">
           <button 
             onClick={() => handlePageChange(pagination.currentPage - 1)}
             disabled={pagination.currentPage <= 1}
+            className="pagination-btn prev-btn"
           >
-            Previous
+            ← Previous
           </button>
-          <span>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
+          
+          <div className="pagination-info">
+            <span>
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </span>
+            <span className="total-items">
+              ({pagination.totalItems} total items)
+            </span>
+          </div>
+          
           <button 
             onClick={() => handlePageChange(pagination.currentPage + 1)}
             disabled={pagination.currentPage >= pagination.totalPages}
+            className="pagination-btn next-btn"
           >
-            Next
+            Next →
           </button>
         </div>
       )}
