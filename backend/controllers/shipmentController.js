@@ -187,7 +187,7 @@ export const getShipment = async (req, res, next) => {
 export const updateShipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, driverName, vehiclePlate, manager } = req.body;
+    const { status, driverName, vehiclePlate, manager, notes } = req.body;
 
     // Validate shipment ID
     if (!id || isNaN(Number(id))) {
@@ -205,10 +205,11 @@ export const updateShipment = async (req, res) => {
 
     // Prepare update object
     const updateData = {};
-    if (status) updateData.status = status;
-    if (driverName) updateData.driverName = driverName;
-    if (vehiclePlate) updateData.vehiclePlate = vehiclePlate;
-    if (manager) updateData.manager = manager;
+    if (status !== undefined) updateData.status = status;
+    if (driverName !== undefined) updateData.driverName = driverName;
+    if (vehiclePlate !== undefined) updateData.vehiclePlate = vehiclePlate;
+    if (manager !== undefined) updateData.manager = manager;
+    if (notes !== undefined) updateData.notes = notes;
 
     const shipment = await Shipment.findOneAndUpdate(
       { shipmentId: Number(id) },

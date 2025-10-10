@@ -63,20 +63,26 @@ export const validateUpdateShipment = [
   
   body('driverName')
     .optional()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Driver name must be between 2 and 50 characters')
+    .isLength({ min: 0, max: 50 })
+    .withMessage('Driver name must be between 0 and 50 characters')
     .trim(),
   
   body('vehiclePlate')
     .optional()
-    .isLength({ min: 2, max: 20 })
-    .withMessage('Vehicle plate must be between 2 and 20 characters')
+    .isLength({ min: 0, max: 20 })
+    .withMessage('Vehicle plate must be between 0 and 20 characters')
     .trim(),
   
   body('manager')
     .optional()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Manager name must be between 2 and 50 characters')
+    .isLength({ min: 0, max: 50 })
+    .withMessage('Manager name must be between 0 and 50 characters')
+    .trim(),
+  
+  body('notes')
+    .optional()
+    .isLength({ min: 0, max: 500 })
+    .withMessage('Notes must be between 0 and 500 characters')
     .trim(),
   
   handleValidationErrors

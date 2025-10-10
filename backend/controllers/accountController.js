@@ -5,11 +5,11 @@ import Account from "../models/accountModel.js";
 // Tạo account vừa lưu DB, vừa ghi lên blockchain nếu cần
 export const createAccount = async (req, res, next) => {
   try {
-    const { address, name, role = "Customer" } = req.body;
+    const { address, name, email, password, role = "Customer" } = req.body;
 
     // Validation
-    if (!address || !name) {
-      return res.status(400).json({ message: "Address and name are required" });
+    if (!address || !name || !email || !password) {
+      return res.status(400).json({ message: "Address, name, email and password are required" });
     }
 
     // Validate role
@@ -27,7 +27,7 @@ export const createAccount = async (req, res, next) => {
     }
 
     // Lưu DB trước (để tránh mất dữ liệu nếu blockchain fail)
-    const account = await Account.create({ address, name, role });
+    const account = await Account.create({ address, name, email, password, role });
 
     // Sync blockchain sau khi lưu DB thành công
     try {
@@ -56,9 +56,10 @@ export const createAccount = async (req, res, next) => {
     
     // Handle specific MongoDB errors
     if (err.code === 11000) {
+      const field = err.keyPattern?.email ? 'email' : 'address';
       return res.status(409).json({ 
-        message: "Address already exists",
-        field: "address"
+        message: `${field === 'email' ? 'Email' : 'Address'} already exists`,
+        field: field
       });
     }
     res.status(500).json({ 
@@ -396,6 +397,42 @@ export const checkAccountExists = async (req, res) => {
   }
 };
 
+// Kiểm tra account có tồn tại không bằng email
+export const checkAccountByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({
+        error: "Email is required"
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        error: "Invalid email format"
+      });
+    }
+
+    const account = await Account.findOne({ email, isActive: true });
+    const exists = !!account;
+
+    res.json({
+      success: true,
+      exists,
+      account: exists ? account : null
+    });
+  } catch (error) {
+    console.error("Check account by email error:", error);
+    res.status(500).json({
+      error: "Server error",
+      message: error.message
+    });
+  }
+};
+
 // Activate/Deactivate account
 export const toggleAccountStatus = async (req, res) => {
   try {
@@ -480,6 +517,56 @@ export const getAccountsByRole = async (req, res) => {
     });
   } catch (error) {
     console.error("Get accounts by role error:", error);
+    res.status(500).json({
+      error: "Server error",
+      message: error.message
+    });
+  }
+};
+
+// Login with email and password
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Email and password are required"
+      });
+    }
+
+    // Find account by email and include password
+    const account = await Account.findOne({ email, isActive: true }).select('+password');
+
+    if (!account) {
+      return res.status(401).json({
+        error: "Invalid email or password"
+      });
+    }
+
+    // Check password
+    const isPasswordValid = await account.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        error: "Invalid email or password"
+      });
+    }
+
+    // Update last login
+    await account.updateLastLogin();
+
+    // Return account without password
+    const accountData = account.toObject();
+    delete accountData.password;
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      account: accountData
+    });
+  } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({
       error: "Server error",
       message: error.message

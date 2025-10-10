@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useShipments } from '../hook/useShipments';
+import { useShipments } from '../hooks/useShipments';
 
 const ShipmentList = ({ onUpdateShipment }) => {
   const [filters, setFilters] = useState({

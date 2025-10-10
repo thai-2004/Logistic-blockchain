@@ -1,65 +1,64 @@
 // frontend/src/App.jsx
-import React, { useState } from 'react';
-import Dashboard from './components/Dashboard';
-import TrackShipment from './components/TrackShipment';
+import React, { useState, useEffect } from 'react';
+import HomePage from './components/HomePage';
+import Login from './components/Login';
+import CustomerDashboard from './components/CustomerDashboard';
+import OwnerDashboard from './components/OwnerDashboard';
 import './styles/App.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('home');
+  const [user, setUser] = useState(null);
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'track', label: 'Track Shipment', icon: '🔍' }
-  ];
+  // Check for existing session on component mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('logistics_user');
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      setCurrentView(userData.role === 'Customer' ? 'customer' : 'owner');
+    }
+  }, []);
 
-  return (
-    <div className="app">
-      <nav className="navbar">
-        <div className="navbar-brand">
-          <div className="logo">
-            <span className="logo-icon">🚛</span>
-            <a href="/" onClick={e => { e.preventDefault(); window.location.href = '/'; }} className="app-title-link">
-              Logistics Blockchain
-            </a>
-          </div>
-          <div className="navbar-subtitle">
-            <span className="blockchain-badge">🔗 Blockchain Powered</span>
-          </div>
-        </div>
-        
-        <div className="nav-tabs">
-          {navItems.map(item => (
-            <button 
-              key={item.id}
-              className={`nav-tab ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('logistics_user', JSON.stringify(userData));
+    setCurrentView(userData.role === 'Customer' ? 'customer' : 'owner');
+  };
 
-      <main className="main-content">
-        <div className="content-wrapper">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'track' && <TrackShipment />}
-        </div>
-      </main>
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('logistics_user');
+    setCurrentView('home');
+  };
 
-      <footer className="app-footer">
-        <div className="footer-content">
-          <p>&copy; 2024 Logistics Blockchain. Built with React & Solidity.</p>
-          <div className="footer-links">
-            <span>🔗 Ethereum Network</span>
-            <span>⚡ Real-time Updates</span>
-            <span>🔒 Secure & Transparent</span>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+  const handleLoginClick = () => {
+    setCurrentView('login');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentView('home');
+  };
+
+  // Render different views based on current state
+  if (currentView === 'home') {
+    return <HomePage onLoginClick={handleLoginClick} />;
+  }
+
+  if (currentView === 'login') {
+    return <Login onLogin={handleLogin} onBackToHome={handleBackToHome} />;
+  }
+
+  if (currentView === 'customer' && user) {
+    return <CustomerDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  if (currentView === 'owner' && user) {
+    return <OwnerDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  // Fallback to home
+  return <HomePage onLoginClick={handleLoginClick} />;
 }
 
 export default App;

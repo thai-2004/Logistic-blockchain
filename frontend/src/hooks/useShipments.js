@@ -12,7 +12,13 @@ export const useShipments = (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await shipmentAPI.getAllShipments({ ...params, ...newParams });
+      // Filter out empty status parameter
+      const filteredParams = { ...params, ...newParams };
+      if (filteredParams.status === '') {
+        delete filteredParams.status;
+      }
+      
+      const response = await shipmentAPI.getAllShipments(filteredParams);
       setShipments(response.data.shipments);
       setPagination(response.data.pagination);
     } catch (err) {

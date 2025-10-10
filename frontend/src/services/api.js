@@ -10,6 +10,46 @@ const api = axios.create({
   },
 });
 
+// Account APIs
+export const accountAPI = {
+  // Get all accounts with pagination and filters
+  getAllAccounts: (params = {}) => api.get('/accounts', { params }),
+  
+  // Get account by ID
+  getAccount: (id) => api.get(`/accounts/${id}`),
+  
+  // Get account by address
+  getAccountByAddress: (address) => api.get(`/accounts/address/${address}`),
+  
+  // Get accounts by role
+  getAccountsByRole: (role, params = {}) => 
+    api.get(`/accounts/role/${role}`, { params }),
+  
+  // Create account
+  createAccount: (data) => api.post('/accounts', data),
+  
+  // Update account
+  updateAccount: (id, data) => api.put(`/accounts/${id}`, data),
+  
+  // Toggle account status (activate/deactivate)
+  toggleAccountStatus: (id, data) => api.patch(`/accounts/${id}/status`, data),
+  
+  // Delete account (soft delete)
+  deleteAccount: (id) => api.delete(`/accounts/${id}`),
+  
+  // Get account statistics
+  getStats: () => api.get('/accounts/stats'),
+  
+  // Check if account exists by address
+  checkAccountExists: (address) => api.get(`/accounts/check/${address}`),
+  
+  // Check if account exists by email
+  checkAccountByEmail: (email) => api.get(`/accounts/check-email/${email}`),
+  
+  // Login
+  login: (data) => api.post('/accounts/login', data)
+};
+
 // Shipment APIs
 export const shipmentAPI = {
   // Get all shipments
@@ -45,7 +85,10 @@ export const shipmentAPI = {
   getShipmentTracking: (id) => api.get(`/shipments/${id}/tracking`),
   
   // Get shipment count
-  getShipmentCount: () => api.get('/shipments/count')
+  getShipmentCount: () => api.get('/shipments/count'),
+  
+  // Cleanup duplicate shipments
+  cleanupDuplicates: () => api.post('/shipments/cleanup-duplicates')
 };
 
 export default api;

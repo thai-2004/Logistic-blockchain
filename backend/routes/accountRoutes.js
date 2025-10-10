@@ -8,8 +8,10 @@ import {
   deleteAccount,
   getAccountStats,
   checkAccountExists,
+  checkAccountByEmail,
   toggleAccountStatus,
-  getAccountsByRole
+  getAccountsByRole,
+  login
 } from "../controllers/accountController.js";
 import {
   validateCreateAccount,
@@ -34,6 +36,9 @@ router.get("/stats", getAccountStats);
 // Route kiểm tra account có tồn tại không
 router.get("/check/:address", validateCheckAccountExists, checkAccountExists);
 
+// Route kiểm tra account có tồn tại không bằng email
+router.get("/check-email/:email", checkAccountByEmail);
+
 // Route lấy account theo address
 router.get("/address/:address", validateGetAccountByAddress, getAccountByAddress);
 
@@ -42,6 +47,9 @@ router.get("/role/:role", validateGetAccountsByRole, getAccountsByRole);
 
 // Route tạo account
 router.post("/", validateCreateAccount, createAccount);
+
+// Route đăng nhập
+router.post("/login", login);
 
 // Route lấy account theo ID
 router.get("/:id", validateGetAccountById, getAccountById);

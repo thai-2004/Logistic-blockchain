@@ -49,6 +49,11 @@ const shipmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 500
+    },
     blockchainTxHash: {
       type: String,
       trim: true

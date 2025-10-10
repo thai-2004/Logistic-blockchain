@@ -1,0 +1,198 @@
+.customer-dashboard {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.customer-dashboard .navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.customer-dashboard .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.customer-dashboard .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.customer-dashboard .logo-icon {
+  font-size: 2rem;
+}
+
+.customer-dashboard .logo h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.customer-dashboard .navbar-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.customer-dashboard .blockchain-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+}
+
+.customer-dashboard .nav-tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.customer-dashboard .nav-tab {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.customer-dashboard .nav-tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.customer-dashboard .nav-tab.active {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.customer-dashboard .nav-icon {
+  font-size: 1.1rem;
+}
+
+.customer-dashboard .user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.customer-dashboard .user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.9rem;
+}
+
+.customer-dashboard .user-name {
+  font-weight: bold;
+}
+
+.customer-dashboard .user-role {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.customer-dashboard .logout-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.customer-dashboard .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.customer-dashboard .main-content {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.customer-dashboard .content-wrapper {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.customer-dashboard .welcome-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.customer-dashboard .welcome-section h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.customer-dashboard .welcome-section p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.customer-dashboard .app-footer {
+  background: #333;
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.customer-dashboard .footer-content p {
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.customer-dashboard .footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.customer-dashboard .footer-links span {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .customer-dashboard .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .customer-dashboard .nav-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .customer-dashboard .user-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .customer-dashboard .main-content {
+    padding: 1rem;
+  }
+  
+  .customer-dashboard .content-wrapper {
+    padding: 1.5rem;
+  }
+}
