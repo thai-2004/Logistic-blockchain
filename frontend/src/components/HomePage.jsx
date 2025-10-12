@@ -1,5 +1,5 @@
 import React from 'react';
-import '../assets/HomePage.css';
+import '../assets/styles/HomePage.css';
 
 const HomePage = ({ onLoginClick }) => {
   return (
@@ -13,7 +13,7 @@ const HomePage = ({ onLoginClick }) => {
           <p className="hero-subtitle">
             Hệ thống quản lý logistics được xây dựng trên công nghệ blockchain
           </p>
-          <p className="hero-description">
+          <p className="hero-description"> 
             Theo dõi, quản lý và tối ưu hóa chuỗi cung ứng với tính minh bạch và bảo mật cao
           </p>
           <div className="hero-features">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { accountAPI } from '../services/api';
-import '../assets/Login.css';
+import '../assets/styles/Login.css';
 
 const Login = ({ onLogin, onBackToHome }) => {
   const [isSignUp, setIsSignUp] = useState(false);

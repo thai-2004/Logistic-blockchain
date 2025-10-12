@@ -1,61 +1,156 @@
-// frontend/src/components/CreateShipment.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { shipmentAPI } from '../services/api';
 
-const ShipmentStats = () => {
-  const [totalShipments, setTotalShipments] = useState(0);
-  const [loading, setLoading] = useState(true);
+const CreateShipment = ({ onShipmentCreated }) => {
+  const [formData, setFormData] = useState({
+    productName: '',
+    origin: '',
+    destination: ''
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  useEffect(() => {
-    fetchShipmentStats();
-  }, []);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  const fetchShipmentStats = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
     try {
-      setLoading(true);
-      const response = await shipmentAPI.getAllShipments();
-      setTotalShipments(response.data.length);
+      const response = await shipmentAPI.createShipment(formData);
+      setSuccess(`Shipment created successfully! ID: ${response.data.shipment.shipmentId}`);
+      
+      // Reset form
+      setFormData({
+        productName: '',
+        origin: '',
+        destination: ''
+      });
+      
+      // Call callback if provided
+      if (onShipmentCreated) {
+        onShipmentCreated(response.data.shipment);
+      }
+      
     } catch (err) {
-      setError('Không thể tải thống kê lô hàng');
-      console.error('Error fetching shipments:', err);
+      setError(err.response?.data?.error || 'Failed to create shipment');
+      console.error('Create shipment error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshStats = () => {
-    fetchShipmentStats();
+  const handleReset = () => {
+    setFormData({
+      productName: '',
+      origin: '',
+      destination: ''
+    });
+    setError(null);
+    setSuccess(null);
   };
 
   return (
-    <div className="shipment-stats">
-      <h2>Thống Kê Lô Hàng</h2>
-      
-      <div className="stats-container">
-        <div className="stat-card">
-          <div className="stat-number">
-            {loading ? 'Đang tải...' : totalShipments}
-          </div>
-          <div className="stat-label">Tổng Số Lô Hàng</div>
-        </div>
-        
-        <button 
-          className="refresh-btn" 
-          onClick={refreshStats}
-          disabled={loading}
-        >
-          {loading ? 'Đang tải...' : 'Làm Mới'}
-        </button>
+    <div className="create-shipment">
+      <div className="form-header">
+        <h2>🚛 Tạo Shipment Mới</h2>
+        <p className="form-subtitle">Tạo lô hàng mới trên blockchain</p>
       </div>
+
+      <form onSubmit={handleSubmit} className="create-form">
+        <div className="form-group">
+          <label htmlFor="productName">Tên sản phẩm *</label>
+          <input
+            type="text"
+            id="productName"
+            name="productName"
+            value={formData.productName}
+            onChange={handleChange}
+            placeholder="Nhập tên sản phẩm"
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="origin">Điểm xuất phát *</label>
+          <input
+            type="text"
+            id="origin"
+            name="origin"
+            value={formData.origin}
+            onChange={handleChange}
+            placeholder="Nhập điểm xuất phát"
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="destination">Điểm đến *</label>
+          <input
+            type="text"
+            id="destination"
+            name="destination"
+            value={formData.destination}
+            onChange={handleChange}
+            placeholder="Nhập điểm đến"
+            required
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-actions">
+          <button 
+            type="button" 
+            onClick={handleReset}
+            className="btn btn-secondary"
+            disabled={loading}
+          >
+            Reset
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="btn btn-primary"
+          >
+            {loading ? (
+              <>
+                <span className="loading-spinner-small"></span>
+                Đang tạo...
+              </>
+            ) : (
+              <>
+                🚛 Tạo Shipment
+              </>
+            )}
+          </button>
+        </div>
+      </form>
 
       {error && (
         <div className="error-message">
+          <span className="error-icon">⚠️</span>
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="success-message">
+          <span className="success-icon">✅</span>
+          {success}
         </div>
       )}
     </div>
   );
 };
 
-export default ShipmentStats;
+export default CreateShipment;

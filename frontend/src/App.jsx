@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
-import CustomerDashboard from './components/CustomerDashboard';
+import ModernDashboard from './components/ModernDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
 import './styles/App.css';
 
@@ -50,7 +50,7 @@ function App() {
   }
 
   if (currentView === 'customer' && user) {
-    return <CustomerDashboard user={user} onLogout={handleLogout} />;
+    return <ModernDashboard user={user} onLogout={handleLogout} />;
   }
 
   if (currentView === 'owner' && user) {
