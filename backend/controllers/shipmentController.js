@@ -26,7 +26,7 @@ export const getAllShipments = async (req, res) => {
     // Build filter object
     const filter = {};
     if (status) filter.status = status;
-    if (customer) filter.customer = { $regex: customer, $options: 'i' };
+    if (customer) filter.customer = { $regex: `^${customer}$`, $options: 'i' };
 
     // Calculate pagination
     const skip = (Number(page) - 1) * Number(limit);
@@ -59,7 +59,7 @@ export const getAllShipments = async (req, res) => {
 
 export const createShipment = async (req, res, next) => {
   try {
-    const { productName, origin, destination } = req.body;
+    const { productName, origin, destination, customer: customerFromBody } = req.body;
 
     // Validate required fields
     if (!productName || !origin || !destination) {
@@ -113,7 +113,7 @@ export const createShipment = async (req, res, next) => {
       origin,
       destination,
       status: "Created",
-      customer: receipt.from,
+      customer: (customerFromBody || receipt.from || '').toLowerCase(),
       blockchainTxHash: receipt.hash
     });
 
@@ -351,7 +351,7 @@ export const getShipmentsByCustomer = async (req, res) => {
     }
 
     // Build filter
-    const filter = { customer };
+    const filter = { customer: { $regex: `^${customer}$`, $options: 'i' } };
     if (status) filter.status = status;
 
     // Calculate pagination

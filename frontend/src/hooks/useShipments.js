@@ -17,8 +17,15 @@ export const useShipments = (params = {}) => {
       if (filteredParams.status === '') {
         delete filteredParams.status;
       }
-      
-      const response = await shipmentAPI.getAllShipments(filteredParams);
+
+      let response;
+      if (filteredParams.customer) {
+        const { customer, ...rest } = filteredParams;
+        const normalizedCustomer = typeof customer === 'string' ? customer.toLowerCase() : customer;
+        response = await shipmentAPI.getShipmentsByCustomer(normalizedCustomer, rest);
+      } else {
+        response = await shipmentAPI.getAllShipments(filteredParams);
+      }
       setShipments(response.data.shipments);
       setPagination(response.data.pagination);
     } catch (err) {

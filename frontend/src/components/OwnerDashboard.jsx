@@ -9,8 +9,8 @@ import LiveCheckpointMap from './LiveCheckpointMap';
 import { shipmentAPI } from '../services/api';
 import '../assets/styles/ModernOwnerDashboard.css';
 
-const OwnerDashboard = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+const OwnerDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChange }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     stats: null,
@@ -108,7 +108,12 @@ const OwnerDashboard = ({ user, onLogout }) => {
             <button
               key={item.id}
               className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                if (onRouteChange) {
+                  onRouteChange(item.id);
+                }
+              }}
               style={{ '--item-color': item.color }}
             >
               <span className="nav-icon">{item.icon}</span>

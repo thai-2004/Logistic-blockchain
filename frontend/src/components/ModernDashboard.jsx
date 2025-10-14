@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import CreateShipment from './CreateShipment';
+import ShipmentList from './ShipmentList';
 import '../assets/styles/ModernDashboard.css';
+import { useShipments } from '../hooks/useShipments';
 
-const ModernDashboard = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [shipments, setShipments] = useState([]);
-  const [loading, setLoading] = useState(true);
+const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChange }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { shipments, refetch: refetchShipments } = useShipments(
+    user && user.role !== 'Owner' ? { customer: user?.address, limit: 5 } : { limit: 5 }
+  );
 
   useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setShipments([
-        { id: 1, trackingNumber: 'SH001', status: 'In Transit', progress: 75, from: 'Hanoi', to: 'Ho Chi Minh City', estimatedDelivery: '2024-01-15' },
-        { id: 2, trackingNumber: 'SH002', status: 'Delivered', progress: 100, from: 'Da Nang', to: 'Hanoi', estimatedDelivery: '2024-01-10' },
-        { id: 3, trackingNumber: 'SH003', status: 'Processing', progress: 25, from: 'Ho Chi Minh City', to: 'Can Tho', estimatedDelivery: '2024-01-20' }
-      ]);
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    // refetch when user changes or refreshKey bumps
+    refetchShipments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, refreshKey]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -46,8 +43,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           <div className="stat-icon">📦</div>
           <div className="stat-content">
             <h3>Total Shipments</h3>
-            <div className="stat-number">24</div>
-            <div className="stat-change positive">+12% from last month</div>
+            <div className="stat-number">{shipments.length}</div>
           </div>
         </div>
         
@@ -55,8 +51,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           <div className="stat-icon">🚚</div>
           <div className="stat-content">
             <h3>In Transit</h3>
-            <div className="stat-number">8</div>
-            <div className="stat-change positive">+3 this week</div>
+            <div className="stat-number">{shipments.filter(s => s.status === 'In Transit').length}</div>
           </div>
         </div>
         
@@ -64,8 +59,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           <div className="stat-icon">✓</div>
           <div className="stat-content">
             <h3>Delivered</h3>
-            <div className="stat-number">16</div>
-            <div className="stat-change positive">98% success rate</div>
+            <div className="stat-number">{shipments.filter(s => s.status === 'Delivered').length}</div>
           </div>
         </div>
         
@@ -73,8 +67,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           <div className="stat-icon">⏱️</div>
           <div className="stat-content">
             <h3>Avg. Delivery</h3>
-            <div className="stat-number">2.3 days</div>
-            <div className="stat-change negative">+0.2 days</div>
+            <div className="stat-number">-</div>
           </div>
         </div>
       </div>
@@ -83,44 +76,53 @@ const ModernDashboard = ({ user, onLogout }) => {
       <div className="recent-shipments">
         <div className="section-header">
           <h2>Recent Shipments</h2>
-          <button className="view-all-btn">View All</button>
+          <button className="view-all-btn" onClick={() => handleTabChange('shipments')}>View All</button>
         </div>
         
         <div className="shipments-list">
-          {shipments.map(shipment => (
-            <div key={shipment.id} className="shipment-card">
+          {shipments.length === 0 ? (
+            <div className="shipment-card">
               <div className="shipment-header">
                 <div className="shipment-info">
-                  <h3>{shipment.trackingNumber}</h3>
-                  <p>{shipment.from} → {shipment.to}</p>
-                </div>
-                <div className="shipment-status" style={{ color: getStatusColor(shipment.status) }}>
-                  <span className="status-icon">{getStatusIcon(shipment.status)}</span>
-                  {shipment.status}
-                </div>
-              </div>
-              
-              <div className="shipment-progress">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ 
-                      width: `${shipment.progress}%`,
-                      backgroundColor: getStatusColor(shipment.status)
-                    }}
-                  ></div>
-                </div>
-                <div className="progress-text">{shipment.progress}% Complete</div>
-              </div>
-              
-              <div className="shipment-details">
-                <div className="detail-item">
-                  <span className="detail-label">Estimated Delivery:</span>
-                  <span className="detail-value">{shipment.estimatedDelivery}</span>
+                  <h3>No shipments yet</h3>
+                  <p>Create or track shipments to see them here</p>
                 </div>
               </div>
             </div>
-          ))}
+          ) : (
+            shipments.map(shipment => (
+              <div key={shipment.id} className="shipment-card">
+                <div className="shipment-header">
+                  <div className="shipment-info">
+                    <h3>{shipment.trackingNumber}</h3>
+                    <p>{shipment.from} → {shipment.to}</p>
+                  </div>
+                  <div className="shipment-status" style={{ color: getStatusColor(shipment.status) }}>
+                    <span className="status-icon">{getStatusIcon(shipment.status)}</span>
+                    {shipment.status}
+                  </div>
+                </div>
+                <div className="shipment-progress">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ 
+                        width: `${shipment.progress}%`,
+                        backgroundColor: getStatusColor(shipment.status)
+                      }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">{shipment.progress}% Complete</div>
+                </div>
+                <div className="shipment-details">
+                  <div className="detail-item">
+                    <span className="detail-label">Estimated Delivery:</span>
+                    <span className="detail-value">{shipment.estimatedDelivery}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -128,7 +130,7 @@ const ModernDashboard = ({ user, onLogout }) => {
       <div className="quick-actions">
         <h2>Quick Actions</h2>
         <div className="actions-grid">
-          <button className="action-btn primary">
+          <button className="action-btn primary" onClick={() => handleTabChange('create')}>
             <span className="action-icon">➕</span>
             Create Shipment
           </button>
@@ -153,75 +155,16 @@ const ModernDashboard = ({ user, onLogout }) => {
     <div className="shipments-content">
       <div className="content-header">
         <h1>My Shipments</h1>
-        <button className="create-shipment-btn">+ Create New Shipment</button>
+        <button
+          className="create-shipment-btn"
+          onClick={() => {
+            handleTabChange('create');
+          }}
+        >
+          + Create New Shipment
+        </button>
       </div>
-      
-      <div className="filters">
-        <div className="filter-group">
-          <label>Status:</label>
-          <select>
-            <option>All</option>
-            <option>Processing</option>
-            <option>In Transit</option>
-            <option>Delivered</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Date Range:</label>
-          <select>
-            <option>Last 30 days</option>
-            <option>Last 3 months</option>
-            <option>Last year</option>
-          </select>
-        </div>
-      </div>
-      
-      <div className="shipments-table">
-        <div className="table-header">
-          <div className="col-tracking">Tracking Number</div>
-          <div className="col-route">Route</div>
-          <div className="col-status">Status</div>
-          <div className="col-progress">Progress</div>
-          <div className="col-actions">Actions</div>
-        </div>
-        
-        {shipments.map(shipment => (
-          <div key={shipment.id} className="table-row">
-            <div className="col-tracking">
-              <strong>{shipment.trackingNumber}</strong>
-            </div>
-            <div className="col-route">
-              {shipment.from} → {shipment.to}
-            </div>
-            <div className="col-status">
-              <span 
-                className="status-badge" 
-                style={{ backgroundColor: getStatusColor(shipment.status) }}
-              >
-                {getStatusIcon(shipment.status)} {shipment.status}
-              </span>
-            </div>
-            <div className="col-progress">
-              <div className="progress-container">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ 
-                      width: `${shipment.progress}%`,
-                      backgroundColor: getStatusColor(shipment.status)
-                    }}
-                  ></div>
-                </div>
-                <span className="progress-text">{shipment.progress}%</span>
-              </div>
-            </div>
-            <div className="col-actions">
-              <button className="action-btn-small">View</button>
-              <button className="action-btn-small">Edit</button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ShipmentList user={user} key={refreshKey} />
     </div>
   );
 
@@ -251,6 +194,13 @@ const ModernDashboard = ({ user, onLogout }) => {
     </div>
   );
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (onRouteChange) {
+      onRouteChange(tab);
+    }
+  };
+
   return (
     <div className="modern-dashboard">
       {/* Sidebar */}
@@ -265,7 +215,7 @@ const ModernDashboard = ({ user, onLogout }) => {
         <nav className="sidebar-nav">
           <button 
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleTabChange('dashboard')}
           >
             <span className="nav-icon">📊</span>
             <span className="nav-label">Dashboard</span>
@@ -273,7 +223,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           
           <button 
             className={`nav-item ${activeTab === 'shipments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('shipments')}
+            onClick={() => handleTabChange('shipments')}
           >
             <span className="nav-icon">📦</span>
             <span className="nav-label">My Shipments</span>
@@ -281,7 +231,7 @@ const ModernDashboard = ({ user, onLogout }) => {
           
           <button 
             className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
+            onClick={() => handleTabChange('analytics')}
           >
             <span className="nav-icon">📈</span>
             <span className="nav-label">Analytics</span>
@@ -339,18 +289,23 @@ const ModernDashboard = ({ user, onLogout }) => {
 
         {/* Content Area */}
         <main className="content">
-          {loading ? (
-            <div className="loading">
-              <div className="loading-spinner"></div>
-              <p>Loading dashboard...</p>
-            </div>
-          ) : (
-            <>
-              {activeTab === 'dashboard' && renderDashboard()}
-              {activeTab === 'shipments' && renderShipments()}
-              {activeTab === 'analytics' && renderAnalytics()}
-            </>
-          )}
+          <>
+            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'shipments' && renderShipments()}
+            {activeTab === 'analytics' && renderAnalytics()}
+            {activeTab === 'create' && (
+              <CreateShipment 
+                user={user}
+                onShipmentCreated={() => {
+                  setActiveTab('shipments');
+                  setRefreshKey((k) => k + 1);
+                  if (onRouteChange) {
+                    onRouteChange('shipments');
+                  }
+                }}
+              />
+            )}
+          </>
         </main>
       </div>
     </div>

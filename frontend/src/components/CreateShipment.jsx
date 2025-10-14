@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { shipmentAPI } from '../services/api';
 
-const CreateShipment = ({ onShipmentCreated }) => {
+const CreateShipment = ({ user, onShipmentCreated }) => {
   const [formData, setFormData] = useState({
     productName: '',
     origin: '',
@@ -25,7 +25,11 @@ const CreateShipment = ({ onShipmentCreated }) => {
     setSuccess(null);
 
     try {
-      const response = await shipmentAPI.createShipment(formData);
+      const payload = {
+        ...formData,
+        customer: user?.address || undefined
+      };
+      const response = await shipmentAPI.createShipment(payload);
       setSuccess(`Shipment created successfully! ID: ${response.data.shipment.shipmentId}`);
       
       // Reset form
@@ -41,8 +45,30 @@ const CreateShipment = ({ onShipmentCreated }) => {
       }
       
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create shipment');
-      console.error('Create shipment error:', err);
+      const status = err.response?.status;
+      const data = err.response?.data;
+
+      // Gracefully handle duplicate shipment (409 Conflict)
+      if (status === 409 && data) {
+        const existing = data.existingShipment;
+        const existingId = existing?.shipmentId;
+        const message = data.message || data.error || 'Duplicate shipment';
+
+        setSuccess(
+          existingId
+            ? `Shipment already exists. Using existing ID: ${existingId}`
+            : message
+        );
+
+        // Bubble up the existing shipment so UI can proceed
+        if (onShipmentCreated && existing) {
+          onShipmentCreated(existing);
+        }
+        setError(null);
+      } else {
+        setError(data?.error || 'Failed to create shipment');
+        console.error('Create shipment error:', err);
+      }
     } finally {
       setLoading(false);
     }

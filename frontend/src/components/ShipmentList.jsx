@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useShipments } from '../hooks/useShipments';
 
-const ShipmentList = ({ onUpdateShipment }) => {
-  const [filters, setFilters] = useState({
-    status: '',
-    page: 1,
-    limit: 10
+const ShipmentList = ({ user, onUpdateShipment }) => {
+  const [filters, setFilters] = useState(() => {
+    const base = { status: '', page: 1, limit: 10 };
+    if (user && user.role !== 'Owner') {
+      return { ...base, customer: user.address };
+    }
+    return base;
   });
+
+  useEffect(() => {
+    const base = { status: '', page: 1, limit: 10 };
+    if (user && user.role !== 'Owner') {
+      setFilters(() => ({ ...base, customer: user.address }));
+    } else {
+      setFilters(() => base);
+    }
+  }, [user]);
 
   const { shipments, loading, error, pagination, refetch } = useShipments(filters);
 
@@ -90,7 +101,7 @@ const ShipmentList = ({ onUpdateShipment }) => {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
+                {(!user || user.role === 'Owner') ? <th>ID</th> : null}
                 <th>Product</th>
                 <th>Origin</th>
                 <th>Destination</th>
@@ -103,7 +114,9 @@ const ShipmentList = ({ onUpdateShipment }) => {
             <tbody>
               {shipments.map(shipment => (
                 <tr key={shipment._id} className="shipment-row">
-                  <td className="shipment-id">#{shipment.shipmentId}</td>
+                  {(!user || user.role === 'Owner') ? (
+                    <td className="shipment-id">#{shipment.shipmentId}</td>
+                  ) : null}
                   <td className="product-name">{shipment.productName}</td>
                   <td className="origin">{shipment.origin}</td>
                   <td className="destination">{shipment.destination}</td>
