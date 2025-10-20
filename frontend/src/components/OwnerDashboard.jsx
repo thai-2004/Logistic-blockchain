@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Dashboard from './Dashboard';
-import TrackShipment from './TrackShipment';
-import CreateShipment from './CreateShipment';
-import UpdateShipment from './UpdateShipment';
-import ShipmentList from './ShipmentList';
-import ShipperPanel from './ShipperPanel';
-import LiveCheckpointMap from './LiveCheckpointMap';
+import Dashboard from '@components/Dashboard';
+import TrackShipment from '@components/TrackShipment';
+import CreateShipment from '@components/CreateShipment';
+import UpdateShipment from '@components/UpdateShipment';
+import ShipmentList from '@components/ShipmentList';
+import ShipperPanel from '@components/ShipperPanel';
+import LiveCheckpointMap from '@components/LiveCheckpointMap';
 import { shipmentAPI } from '../services/api';
 import '../assets/styles/ModernOwnerDashboard.css';
 

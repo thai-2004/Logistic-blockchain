@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import CreateShipment from './CreateShipment';
-import ShipmentList from './ShipmentList';
+import CreateShipment from '@components/CreateShipment';
+import ShipmentList from '@components/ShipmentList';
 import '../assets/styles/ModernDashboard.css';
 import { useShipments } from '../hooks/useShipments';
 

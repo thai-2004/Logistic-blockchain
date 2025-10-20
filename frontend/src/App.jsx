@@ -1,9 +1,9 @@
 // frontend/src/App.jsx
 import React, { useState, useEffect } from 'react';
-import HomePage from './components/HomePage';
-import Login from './components/Login';
-import ModernDashboard from './components/ModernDashboard';
-import OwnerDashboard from './components/OwnerDashboard';
+import HomePage from '@components/HomePage';
+import Login from '@components/Login';
+import ModernDashboard from '@components/ModernDashboard';
+import OwnerDashboard from '@components/OwnerDashboard';
 import './styles/App.css';
 
 function App() {

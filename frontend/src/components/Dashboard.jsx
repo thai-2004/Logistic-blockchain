@@ -1,8 +1,8 @@
 // frontend/src/components/Dashboard.jsx
 import React, { useState } from 'react';
-import ShipmentList from './ShipmentList';
-import CreateShipment from './CreateShipment';
-import UpdateShipment from './UpdateShipment';
+import ShipmentList from '@components/ShipmentList';
+import CreateShipment from '@components/CreateShipment';
+import UpdateShipment from '@components/UpdateShipment';
 
 const Dashboard = () => {
   const [selectedShipmentId, setSelectedShipmentId] = useState(null);
