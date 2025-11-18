@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../assets/styles/HomePage.css';
 
-const HomePage = ({ onLoginClick }) => {
+const HomePage = () => {
+  const navigate = useNavigate();
   return (
     <div className="homepage">
       <div className="hero-section">
@@ -30,7 +32,7 @@ const HomePage = ({ onLoginClick }) => {
               <span>Secure & Transparent</span>
             </div>
           </div>
-          <button className="login-btn" onClick={onLoginClick}>
+          <button className="login-btn" onClick={() => navigate('/login')}>
             Đăng nhập để bắt đầu
           </button>
         </div>
@@ -74,7 +76,7 @@ const HomePage = ({ onLoginClick }) => {
       <div className="cta-section">
         <h2>Sẵn sàng bắt đầu?</h2>
         <p>Đăng nhập ngay để trải nghiệm hệ thống logistics blockchain</p>
-        <button className="cta-btn" onClick={onLoginClick}>
+        <button className="cta-btn" onClick={() => navigate('/login')}>
           Đăng nhập ngay
         </button>
       </div>

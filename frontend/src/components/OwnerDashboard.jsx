@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Dashboard from '@components/Dashboard';
 import TrackShipment from '@components/TrackShipment';
 import CreateShipment from '@components/CreateShipment';
@@ -322,6 +323,18 @@ const OwnerDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChang
       </div>
     </div>
   );
+};
+
+OwnerDashboard.propTypes = {
+  user: PropTypes.shape({
+    email: PropTypes.string.isRequired,
+    role: PropTypes.string.isRequired,
+    name: PropTypes.string,
+    address: PropTypes.string,
+  }).isRequired,
+  onLogout: PropTypes.func.isRequired,
+  initialTab: PropTypes.string,
+  onRouteChange: PropTypes.func.isRequired,
 };
 
 export default OwnerDashboard;

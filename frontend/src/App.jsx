@@ -1,5 +1,8 @@
 // frontend/src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from '@components/HomePage';
 import Login from '@components/Login';
 import ModernDashboard from '@components/ModernDashboard';
@@ -7,135 +10,92 @@ import OwnerDashboard from '@components/OwnerDashboard';
 import './styles/App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('home');
-  const [user, setUser] = useState(null);
-  const [customerInitialTab, setCustomerInitialTab] = useState('dashboard');
-  const [ownerInitialTab, setOwnerInitialTab] = useState('dashboard');
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected Customer routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute requireCustomer>
+                <CustomerDashboardWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shipments"
+            element={
+              <ProtectedRoute requireCustomer>
+                <CustomerDashboardWrapper initialTab="shipments" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute requireCustomer>
+                <CustomerDashboardWrapper initialTab="create" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute requireCustomer>
+                <CustomerDashboardWrapper initialTab="analytics" />
+              </ProtectedRoute>
+            }
+          />
 
-  // Khởi động ứng dụng: đăng xuất mọi phiên cũ và định tuyến theo URL hiện tại
-  useEffect(() => {
-    // Luôn đăng xuất khi khởi chạy (clear phiên cũ)
-    localStorage.removeItem('logistics_user');
-    setUser(null);
+          {/* Protected Owner routes */}
+          <Route
+            path="/owner"
+            element={
+              <ProtectedRoute requireOwner>
+                <OwnerDashboardWrapper />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/:tab"
+            element={
+              <ProtectedRoute requireOwner>
+                <OwnerDashboardWrapper />
+              </ProtectedRoute>
+            }
+          />
 
-    // Định tuyến ban đầu dựa trên URL
-    const { pathname } = window.location;
-    if (pathname === '/Login') {
-      setCurrentView('login');
-    } else {
-      // Hỗ trợ các route dashboard không yêu cầu đăng nhập trước (sẽ chuyển đến home nếu chưa login)
-      if (pathname === '/dashboard' || pathname === '/shipments' || pathname === '/analytics' || pathname === '/create') {
-        setCurrentView('customer');
-        setCustomerInitialTab(
-          pathname === '/dashboard'
-            ? 'dashboard'
-            : pathname === '/shipments'
-            ? 'shipments'
-            : pathname === '/create'
-            ? 'create'
-            : 'analytics'
-        );
-      } else if (pathname === '/owner' || pathname.startsWith('/owner/')) {
-        setCurrentView('owner');
-        const ownerTab = pathname === '/owner' ? 'dashboard' : pathname.replace('/owner/', '');
-        setOwnerInitialTab(ownerTab);
-      } else {
-        setCurrentView('home');
-        if (pathname !== '/home') {
-          window.history.replaceState(null, '', '/home');
-        }
-      }
-    }
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
 
-    // Lắng nghe điều hướng back/forward của trình duyệt
-    const handlePopState = () => {
-      const { pathname } = window.location;
-      if (pathname === '/Login') {
-        setCurrentView('login');
-        return;
-      }
-      if (pathname === '/dashboard' || pathname === '/shipments' || pathname === '/analytics' || pathname === '/create') {
-        setCurrentView('customer');
-        setCustomerInitialTab(
-          pathname === '/dashboard'
-            ? 'dashboard'
-            : pathname === '/shipments'
-            ? 'shipments'
-            : pathname === '/create'
-            ? 'create'
-            : 'analytics'
-        );
-        return;
-      }
-      if (pathname === '/owner' || pathname.startsWith('/owner/')) {
-        setCurrentView('owner');
-        const ownerTab = pathname === '/owner' ? 'dashboard' : pathname.replace('/owner/', '');
-        setOwnerInitialTab(ownerTab);
-        return;
-      }
-      if (pathname === '/home') {
-        setCurrentView('home');
-        return;
-      }
-      // Bất kỳ route khác: điều chỉnh về /home
-      setCurrentView('home');
-      if (pathname !== '/home') {
-        window.history.replaceState(null, '', '/home');
-      }
-    };
+// Wrapper component for Customer Dashboard
+function CustomerDashboardWrapper({ initialTab = 'dashboard' }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem('logistics_user', JSON.stringify(userData));
-    setCurrentView(userData.role === 'Customer' ? 'customer' : 'owner');
-    if (userData.role === 'Customer') {
-      if (window.location.pathname !== '/dashboard') {
-        window.history.pushState(null, '', '/dashboard');
-      }
-    } else {
-      if (!window.location.pathname.startsWith('/owner')) {
-        window.history.pushState(null, '', '/owner');
-      }
-    }
+  // Determine initial tab from URL
+  const getTabFromPath = () => {
+    const path = location.pathname;
+    if (path === '/dashboard') return 'dashboard';
+    if (path === '/shipments') return 'shipments';
+    if (path === '/create') return 'create';
+    if (path === '/analytics') return 'analytics';
+    return initialTab;
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('logistics_user');
-    setCurrentView('home');
-    if (window.location.pathname !== '/home') {
-      window.history.pushState(null, '', '/home');
-    }
-  };
-
-  const handleLoginClick = () => {
-    setCurrentView('login');
-    if (window.location.pathname !== '/Login') {
-      window.history.pushState(null, '', '/Login');
-    }
-  };
-
-  const handleBackToHome = () => {
-    setCurrentView('home');
-    if (window.location.pathname !== '/home') {
-      window.history.pushState(null, '', '/home');
-    }
-  };
-
-  // Render different views based on current state
-  if (currentView === 'home') {
-    return <HomePage onLoginClick={handleLoginClick} />;
-  }
-
-  if (currentView === 'login') {
-    return <Login onLogin={handleLogin} onBackToHome={handleBackToHome} />;
-  }
-
-  const handleCustomerRouteChange = (tab) => {
+  const handleRouteChange = (tab) => {
     const path =
       tab === 'dashboard'
         ? '/dashboard'
@@ -144,42 +104,45 @@ function App() {
         : tab === 'create'
         ? '/create'
         : '/analytics';
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
+    navigate(path);
   };
 
-  if (currentView === 'customer' && user) {
-    return (
-      <ModernDashboard 
-        user={user} 
-        onLogout={handleLogout} 
-        initialTab={customerInitialTab}
-        onRouteChange={handleCustomerRouteChange}
-      />
-    );
-  }
+  return (
+    <ModernDashboard
+      user={user}
+      onLogout={logout}
+      initialTab={getTabFromPath()}
+      onRouteChange={handleRouteChange}
+    />
+  );
+}
 
-  const handleOwnerRouteChange = (tab) => {
-    const path = tab === 'dashboard' ? '/owner' : `/owner/${tab}`;
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
+// Wrapper component for Owner Dashboard
+function OwnerDashboardWrapper() {
+  const { user, logout } = useAuth();
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine initial tab from URL
+  const getTabFromPath = () => {
+    if (location.pathname === '/owner') return 'dashboard';
+    return tab || 'dashboard';
   };
 
-  if (currentView === 'owner' && user) {
-    return (
-      <OwnerDashboard 
-        user={user} 
-        onLogout={handleLogout} 
-        initialTab={ownerInitialTab}
-        onRouteChange={handleOwnerRouteChange}
-      />
-    );
-  }
+  const handleRouteChange = (newTab) => {
+    const path = newTab === 'dashboard' ? '/owner' : `/owner/${newTab}`;
+    navigate(path);
+  };
 
-  // Fallback to home
-  return <HomePage onLoginClick={handleLoginClick} />;
+  return (
+    <OwnerDashboard
+      user={user}
+      onLogout={logout}
+      initialTab={getTabFromPath()}
+      onRouteChange={handleRouteChange}
+    />
+  );
 }
 
 export default App;

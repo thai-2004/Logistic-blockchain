@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import CreateShipment from '@components/CreateShipment';
 import ShipmentList from '@components/ShipmentList';
 import '../assets/styles/ModernDashboard.css';
@@ -270,7 +271,6 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
             <div className="header-actions">
               <button className="notification-btn">🔔</button>
               <button className="message-btn">💬</button>
-              
               <div className="user-profile">
                 <div className="user-avatar">
                   {user?.name?.charAt(0) || 'U'}
@@ -279,10 +279,8 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
                   <div className="user-name">{user?.name || 'User'}</div>
                   <div className="user-role">Customer</div>
                 </div>
-                <button className="logout-btn" onClick={onLogout}>
-                  Logout
-                </button>
               </div>
+              <button className="logout-btn" onClick={onLogout}>Logout</button>
             </div>
           </div>
         </header>
@@ -310,6 +308,18 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
       </div>
     </div>
   );
+};
+
+ModernDashboard.propTypes = {
+  user: PropTypes.shape({
+    email: PropTypes.string.isRequired,
+    role: PropTypes.string.isRequired,
+    name: PropTypes.string,
+    address: PropTypes.string,
+  }).isRequired,
+  onLogout: PropTypes.func.isRequired,
+  initialTab: PropTypes.oneOf(['dashboard', 'shipments', 'create', 'analytics']),
+  onRouteChange: PropTypes.func.isRequired,
 };
 
 export default ModernDashboard;

@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { accountAPI } from '../services/api';
 import '../assets/styles/Login.css';
 
-const Login = ({ onLogin, onBackToHome }) => {
+const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
+  const from = location.state?.from?.pathname || '/dashboard';
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -12,6 +18,13 @@ const Login = ({ onLogin, onBackToHome }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -74,12 +87,20 @@ const Login = ({ onLogin, onBackToHome }) => {
         }
 
         // Đăng nhập thành công
-        onLogin({
+        const userData = {
           email: result.data.account.email,
           role: result.data.account.role,
           name: result.data.account.name,
           address: result.data.account.address
-        });
+        };
+        
+        // Extract token from response if available
+        const token = result.data.token || result.data.accessToken || null;
+        login(userData, token);
+        
+        // Navigate to appropriate dashboard
+        const redirectPath = userData.role === 'Owner' ? '/owner' : '/dashboard';
+        navigate(redirectPath, { replace: true });
       }
     } catch {
       setError(isSignUp ? 'Đăng ký thất bại. Vui lòng thử lại.' : 'Đăng nhập thất bại. Vui lòng thử lại.');
@@ -202,7 +223,7 @@ const Login = ({ onLogin, onBackToHome }) => {
             </p>
           </div>
           
-          <button className="back-to-home-btn" onClick={onBackToHome}>
+          <button className="back-to-home-btn" onClick={() => navigate('/home')}>
             ← Quay lại trang chủ
           </button>
         </div>
