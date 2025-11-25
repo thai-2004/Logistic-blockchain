@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import PropTypes from 'prop-types';
 import CreateShipment from '@components/CreateShipment';
 import ShipmentList from '@components/ShipmentList';
@@ -8,9 +8,14 @@ import { useShipments } from '../hooks/useShipments';
 const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChange }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [refreshKey, setRefreshKey] = useState(0);
-  const { shipments, refetch: refetchShipments } = useShipments(
-    user && user.role !== 'Owner' ? { customer: user?.address, limit: 5 } : { limit: 5 }
+  
+  // Memoize shipment params
+  const shipmentParams = useMemo(() => 
+    user && user.role !== 'Owner' ? { customer: user?.address, limit: 5 } : { limit: 5 },
+    [user]
   );
+  
+  const { shipments, refetch: refetchShipments } = useShipments(shipmentParams);
 
   useEffect(() => {
     // refetch when user changes or refreshKey bumps
@@ -18,23 +23,31 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, refreshKey]);
 
-  const getStatusColor = (status) => {
+  // Memoize status helpers
+  const getStatusColor = useCallback((status) => {
     switch (status) {
       case 'Delivered': return '#4caf50';
       case 'In Transit': return '#2196f3';
       case 'Processing': return '#ff9800';
       default: return '#9e9e9e';
     }
-  };
+  }, []);
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = useCallback((status) => {
     switch (status) {
       case 'Delivered': return '✓';
       case 'In Transit': return '🚚';
       case 'Processing': return '⏳';
       default: return '📦';
     }
-  };
+  }, []);
+
+  // Memoize computed stats
+  const stats = useMemo(() => ({
+    total: shipments.length,
+    inTransit: shipments.filter(s => s.status === 'In Transit').length,
+    delivered: shipments.filter(s => s.status === 'Delivered').length
+  }), [shipments]);
 
   const renderDashboard = () => (
     <div className="dashboard-content">
@@ -44,7 +57,7 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
           <div className="stat-icon">📦</div>
           <div className="stat-content">
             <h3>Total Shipments</h3>
-            <div className="stat-number">{shipments.length}</div>
+            <div className="stat-number">{stats.total}</div>
           </div>
         </div>
         
@@ -52,7 +65,7 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
           <div className="stat-icon">🚚</div>
           <div className="stat-content">
             <h3>In Transit</h3>
-            <div className="stat-number">{shipments.filter(s => s.status === 'In Transit').length}</div>
+            <div className="stat-number">{stats.inTransit}</div>
           </div>
         </div>
         
@@ -60,7 +73,7 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
           <div className="stat-icon">✓</div>
           <div className="stat-content">
             <h3>Delivered</h3>
-            <div className="stat-number">{shipments.filter(s => s.status === 'Delivered').length}</div>
+            <div className="stat-number">{stats.delivered}</div>
           </div>
         </div>
         
@@ -195,12 +208,20 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
     </div>
   );
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
     if (onRouteChange) {
       onRouteChange(tab);
     }
-  };
+  }, [onRouteChange]);
+
+  const handleShipmentCreated = useCallback(() => {
+    setActiveTab('shipments');
+    setRefreshKey((k) => k + 1);
+    if (onRouteChange) {
+      onRouteChange('shipments');
+    }
+  }, [onRouteChange]);
 
   return (
     <div className="modern-dashboard">
@@ -294,13 +315,7 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
             {activeTab === 'create' && (
               <CreateShipment 
                 user={user}
-                onShipmentCreated={() => {
-                  setActiveTab('shipments');
-                  setRefreshKey((k) => k + 1);
-                  if (onRouteChange) {
-                    onRouteChange('shipments');
-                  }
-                }}
+                onShipmentCreated={handleShipmentCreated}
               />
             )}
           </>
@@ -322,4 +337,4 @@ ModernDashboard.propTypes = {
   onRouteChange: PropTypes.func.isRequired,
 };
 
-export default ModernDashboard;
+export default memo(ModernDashboard);

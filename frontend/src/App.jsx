@@ -1,18 +1,40 @@
 // frontend/src/App.jsx
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from '@components/HomePage';
 import Login from '@components/Login';
-import ModernDashboard from '@components/ModernDashboard';
-import OwnerDashboard from '@components/OwnerDashboard';
 import './styles/App.css';
+import './assets/styles/Toast.css';
+
+// Lazy load heavy components for performance
+const ModernDashboard = lazy(() => import('@components/ModernDashboard'));
+const OwnerDashboard = lazy(() => import('@components/OwnerDashboard'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    fontSize: '18px',
+    color: '#666'
+  }}>
+    <div>
+      <div className="loading-spinner" style={{ margin: '0 auto 20px' }}></div>
+      <p>Đang tải...</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
         <Routes>
           {/* Public routes */}
           <Route path="/home" element={<HomePage />} />
@@ -23,7 +45,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute requireCustomer>
-                <CustomerDashboardWrapper />
+                <Suspense fallback={<LoadingFallback />}>
+                  <CustomerDashboardWrapper />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -31,7 +55,9 @@ function App() {
             path="/shipments"
             element={
               <ProtectedRoute requireCustomer>
-                <CustomerDashboardWrapper initialTab="shipments" />
+                <Suspense fallback={<LoadingFallback />}>
+                  <CustomerDashboardWrapper initialTab="shipments" />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -39,7 +65,9 @@ function App() {
             path="/create"
             element={
               <ProtectedRoute requireCustomer>
-                <CustomerDashboardWrapper initialTab="create" />
+                <Suspense fallback={<LoadingFallback />}>
+                  <CustomerDashboardWrapper initialTab="create" />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -47,7 +75,9 @@ function App() {
             path="/analytics"
             element={
               <ProtectedRoute requireCustomer>
-                <CustomerDashboardWrapper initialTab="analytics" />
+                <Suspense fallback={<LoadingFallback />}>
+                  <CustomerDashboardWrapper initialTab="analytics" />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -57,7 +87,9 @@ function App() {
             path="/owner"
             element={
               <ProtectedRoute requireOwner>
-                <OwnerDashboardWrapper />
+                <Suspense fallback={<LoadingFallback />}>
+                  <OwnerDashboardWrapper />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -65,7 +97,9 @@ function App() {
             path="/owner/:tab"
             element={
               <ProtectedRoute requireOwner>
-                <OwnerDashboardWrapper />
+                <Suspense fallback={<LoadingFallback />}>
+                  <OwnerDashboardWrapper />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -75,6 +109,7 @@ function App() {
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }
@@ -107,15 +142,15 @@ function CustomerDashboardWrapper({ initialTab = 'dashboard' }) {
     navigate(path);
   };
 
-  return (
-    <ModernDashboard
-      user={user}
+    return (
+      <ModernDashboard 
+        user={user} 
       onLogout={logout}
       initialTab={getTabFromPath()}
       onRouteChange={handleRouteChange}
-    />
-  );
-}
+      />
+    );
+  }
 
 // Wrapper component for Owner Dashboard
 function OwnerDashboardWrapper() {
@@ -135,14 +170,14 @@ function OwnerDashboardWrapper() {
     navigate(path);
   };
 
-  return (
-    <OwnerDashboard
-      user={user}
+    return (
+      <OwnerDashboard 
+        user={user} 
       onLogout={logout}
       initialTab={getTabFromPath()}
       onRouteChange={handleRouteChange}
-    />
-  );
-}
+      />
+    );
+  }
 
 export default App;

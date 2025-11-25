@@ -1,88 +1,124 @@
-import React, { useState } from 'react';
+import React, { useMemo, memo } from 'react';
 import { shipmentAPI } from '../services/api';
+import { useForm } from '../hooks/useForm';
+import { useToast } from '../contexts/ToastContext';
+import PropTypes from 'prop-types';
 
 const CreateShipment = ({ user, onShipmentCreated }) => {
-  const [formData, setFormData] = useState({
+  const toast = useToast();
+
+  // Validation rules
+  const validationRules = useMemo(() => ({
+    productName: {
+      required: true,
+      requiredMessage: 'Vui lòng nhập tên sản phẩm',
+      minLength: 2,
+      minLengthMessage: 'Tên sản phẩm phải có ít nhất 2 ký tự',
+      maxLength: 100,
+      maxLengthMessage: 'Tên sản phẩm không được vượt quá 100 ký tự'
+    },
+    origin: {
+      required: true,
+      requiredMessage: 'Vui lòng nhập điểm xuất phát',
+      minLength: 2,
+      minLengthMessage: 'Điểm xuất phát phải có ít nhất 2 ký tự',
+      maxLength: 200,
+      maxLengthMessage: 'Điểm xuất phát không được vượt quá 200 ký tự'
+    },
+    destination: {
+      required: true,
+      requiredMessage: 'Vui lòng nhập điểm đến',
+      minLength: 2,
+      minLengthMessage: 'Điểm đến phải có ít nhất 2 ký tự',
+      maxLength: 200,
+      maxLengthMessage: 'Điểm đến không được vượt quá 200 ký tự'
+    }
+  }), []);
+
+  const initialValues = useMemo(() => ({
     productName: '',
     origin: '',
     destination: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  }), []);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
+  const onSubmit = async (values) => {
     try {
       const payload = {
-        ...formData,
+        ...values,
         customer: user?.address || undefined
       };
       const response = await shipmentAPI.createShipment(payload);
-      setSuccess(`Shipment created successfully! ID: ${response.data.shipment.shipmentId}`);
       
-      // Reset form
-      setFormData({
-        productName: '',
-        origin: '',
-        destination: ''
-      });
+      // Handle success response (201)
+      const shipment = response.data.shipment || response.data.existingShipment;
       
-      // Call callback if provided
-      if (onShipmentCreated) {
-        onShipmentCreated(response.data.shipment);
+      if (response.status === 201 || response.data.success) {
+        toast.success(`Shipment created successfully! ID: ${shipment?.shipmentId || 'N/A'}`);
+        
+        // Call callback if provided
+        if (onShipmentCreated && shipment) {
+          onShipmentCreated(shipment);
+        }
       }
       
     } catch (err) {
       const status = err.response?.status;
       const data = err.response?.data;
 
-      // Gracefully handle duplicate shipment (409 Conflict)
-      if (status === 409 && data) {
-        const existing = data.existingShipment;
-        const existingId = existing?.shipmentId;
-        const message = data.message || data.error || 'Duplicate shipment';
-
-        setSuccess(
-          existingId
-            ? `Shipment already exists. Using existing ID: ${existingId}`
-            : message
-        );
-
-        // Bubble up the existing shipment so UI can proceed
-        if (onShipmentCreated && existing) {
-          onShipmentCreated(existing);
+      // Handle 200 response (duplicate transaction but same shipment)
+      if (status === 200 && data?.isDuplicate) {
+        const shipment = data.shipment;
+        toast.info(data.message || `Shipment already exists. ID: ${shipment?.shipmentId || 'N/A'}`);
+        
+        if (onShipmentCreated && shipment) {
+          onShipmentCreated(shipment);
         }
-        setError(null);
-      } else {
-        setError(data?.error || 'Failed to create shipment');
-        console.error('Create shipment error:', err);
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      // Gracefully handle duplicate shipment (409 Conflict)
+      // This happens when shipment ID exists but with different transaction
+      // Usually means blockchain was reset but database still has old data
+      if (status === 409 && data) {
+        // Try to get shipment from response (prefer shipment over existingShipment)
+        const shipment = data.shipment || data.existingShipment;
+        const shipmentId = shipment?.shipmentId;
+        
+        // Show detailed error message if conflict details are available
+        let message = data.message || data.error || 'Shipment ID conflict';
+        if (data.conflictDetails) {
+          message = `Shipment ID ${shipmentId} đã tồn tại với sản phẩm khác. ` +
+                   `Có thể blockchain đã được reset. ` +
+                   `Sản phẩm hiện tại: "${data.conflictDetails.existingProductName}"`;
+        } else if (shipmentId) {
+          message = `Shipment ID ${shipmentId} đã tồn tại trong database`;
+        }
+
+        toast.warning(message);
+
+        // Don't call callback for real conflicts - let user know there's an issue
+        // User should check the existing shipment or contact admin
+        return;
+      } else {
+        // For other errors, show error message
+        const errorMessage = data?.message || data?.error || 'Failed to create shipment';
+        toast.error(errorMessage);
+        console.error('Create shipment error:', err);
+        throw err; // Re-throw to prevent form reset on error
+      }
     }
   };
 
-  const handleReset = () => {
-    setFormData({
-      productName: '',
-      origin: '',
-      destination: ''
-    });
-    setError(null);
-    setSuccess(null);
-  };
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    reset
+  } = useForm(initialValues, validationRules, onSubmit);
 
   return (
     <div className="create-shipment">
@@ -98,12 +134,15 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
             type="text"
             id="productName"
             name="productName"
-            value={formData.productName}
+            value={values.productName}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="Nhập tên sản phẩm"
-            required
-            className="form-input"
+            className={`form-input ${touched.productName && errors.productName ? 'error' : ''}`}
           />
+          {touched.productName && errors.productName && (
+            <span className="error-text">{errors.productName}</span>
+          )}
         </div>
 
         <div className="form-group">
@@ -112,12 +151,15 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
             type="text"
             id="origin"
             name="origin"
-            value={formData.origin}
+            value={values.origin}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="Nhập điểm xuất phát"
-            required
-            className="form-input"
+            className={`form-input ${touched.origin && errors.origin ? 'error' : ''}`}
           />
+          {touched.origin && errors.origin && (
+            <span className="error-text">{errors.origin}</span>
+          )}
         </div>
 
         <div className="form-group">
@@ -126,29 +168,32 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
             type="text"
             id="destination"
             name="destination"
-            value={formData.destination}
+            value={values.destination}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="Nhập điểm đến"
-            required
-            className="form-input"
+            className={`form-input ${touched.destination && errors.destination ? 'error' : ''}`}
           />
+          {touched.destination && errors.destination && (
+            <span className="error-text">{errors.destination}</span>
+          )}
         </div>
 
         <div className="form-actions">
           <button 
             type="button" 
-            onClick={handleReset}
+            onClick={reset}
             className="btn btn-secondary"
-            disabled={loading}
+            disabled={isSubmitting}
           >
             Reset
           </button>
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={isSubmitting}
             className="btn btn-primary"
           >
-            {loading ? (
+            {isSubmitting ? (
               <>
                 <span className="loading-spinner-small"></span>
                 Đang tạo...
@@ -161,22 +206,15 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
           </button>
         </div>
       </form>
-
-      {error && (
-        <div className="error-message">
-          <span className="error-icon">⚠️</span>
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="success-message">
-          <span className="success-icon">✅</span>
-          {success}
-        </div>
-      )}
     </div>
   );
 };
 
-export default CreateShipment;
+CreateShipment.propTypes = {
+  user: PropTypes.shape({
+    address: PropTypes.string,
+  }),
+  onShipmentCreated: PropTypes.func,
+};
+
+export default memo(CreateShipment);

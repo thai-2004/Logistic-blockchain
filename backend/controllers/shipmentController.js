@@ -94,14 +94,31 @@ export const createShipment = async (req, res, next) => {
     // Check if shipmentId already exists in database
     const existingShipment = await Shipment.findOne({ shipmentId });
     if (existingShipment) {
-      console.warn(`Shipment with ID ${shipmentId} already exists in database`);
+      // Check if this is the same transaction (same tx hash) - means it was already processed
+      if (existingShipment.blockchainTxHash === receipt.hash) {
+        console.info(`Shipment ${shipmentId} already processed with same transaction hash`);
+        return res.status(200).json({
+          success: true,
+          message: "Shipment already exists (duplicate transaction)",
+          shipment: existingShipment,
+          isDuplicate: true
+        });
+      }
+      
+      // Different transaction but same ID - this is a real conflict
+      // This can happen if blockchain was reset but database still has old data
+      console.warn(`Shipment with ID ${shipmentId} already exists in database with different transaction`);
       return res.status(409).json({
-        error: "Shipment already exists",
-        message: `Shipment with ID ${shipmentId} already exists in database`,
-        existingShipment: {
-          shipmentId: existingShipment.shipmentId,
-          status: existingShipment.status,
-          createdAt: existingShipment.createdAt
+        success: false,
+        error: "Shipment ID conflict",
+        message: `Shipment ID ${shipmentId} already exists in database. This may occur if the blockchain was reset. The existing shipment has different transaction hash.`,
+        shipment: existingShipment,
+        existingShipment: existingShipment,
+        conflictDetails: {
+          existingTxHash: existingShipment.blockchainTxHash,
+          newTxHash: receipt.hash,
+          existingProductName: existingShipment.productName,
+          newProductName: productName
         }
       });
     }
@@ -127,26 +144,45 @@ export const createShipment = async (req, res, next) => {
     
     // Handle duplicate key error specifically
     if (err.code === 11000) {
-      console.error(`Duplicate key error for shipmentId ${shipmentId}:`, err.keyPattern);
+      console.error(`Duplicate key error:`, err.keyPattern);
       
-      // Try to find the existing shipment
-      const existingShipment = await Shipment.findOne({ shipmentId });
+      // Try to extract shipmentId from error message or keyValue
+      let existingShipment = null;
+      let duplicateShipmentId = null;
+      
+      // Method 1: Try to get from err.keyValue (MongoDB provides this)
+      if (err.keyValue && err.keyValue.shipmentId) {
+        duplicateShipmentId = err.keyValue.shipmentId;
+      }
+      // Method 2: Try to extract from error message
+      else if (err.message) {
+        const shipmentIdMatch = err.message.match(/shipmentId[:\s]+(\d+)/i);
+        if (shipmentIdMatch) {
+          duplicateShipmentId = Number(shipmentIdMatch[1]);
+        }
+      }
+      
+      // If we found the duplicate shipmentId, find the existing shipment
+      if (duplicateShipmentId) {
+        existingShipment = await Shipment.findOne({ shipmentId: duplicateShipmentId });
+      }
+      
+      // If we found the existing shipment, return it
       if (existingShipment) {
         return res.status(409).json({
+          success: false,
           error: "Duplicate shipment ID",
-          message: "A shipment with this ID already exists",
-          existingShipment: {
-            shipmentId: existingShipment.shipmentId,
-            status: existingShipment.status,
-            createdAt: existingShipment.createdAt
-          }
+          message: `A shipment with ID ${duplicateShipmentId} already exists`,
+          shipment: existingShipment, // Return full shipment object
+          existingShipment: existingShipment // Keep for backward compatibility
         });
       }
       
       return res.status(409).json({
+        success: false,
         error: "Duplicate shipment ID",
         message: "A shipment with this ID already exists",
-        details: err.keyPattern
+        details: err.keyPattern || err.keyValue
       });
     }
     

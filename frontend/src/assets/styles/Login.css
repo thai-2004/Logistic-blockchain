@@ -226,6 +226,38 @@
   font-weight: 500;
 }
 
+.form-group input.error,
+.form-group select.error {
+  border-color: #ef4444;
+  background: rgba(254, 242, 242, 0.8);
+}
+
+.form-group input.error:focus,
+.form-group select.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  display: block;
+  animation: errorFadeIn 0.3s ease-in;
+}
+
+@keyframes errorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .login-submit-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;

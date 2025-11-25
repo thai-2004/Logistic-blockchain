@@ -38,6 +38,12 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+    // For 409 Conflict, we'll let the component handle it gracefully
+    // Don't log it as an error since it's expected behavior
+    if (error.response?.status === 409) {
+      // Return the error but don't treat it as a critical failure
+      // The component will handle it appropriately
+    }
     return Promise.reject(error);
   }
 );
