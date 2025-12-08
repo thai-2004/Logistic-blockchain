@@ -26,6 +26,21 @@ export const validateCreateAccount = [
     .isLength({ min: 2, max: 50 })
     .withMessage('Name must be between 2 and 50 characters')
     .trim(),
+
+  body('email')
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Invalid email format')
+    .isLength({ max: 100 })
+    .withMessage('Email is too long')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 8, max: 100 })
+    .withMessage('Password must be between 8 and 100 characters'),
   
   body('role')
     .optional()
@@ -114,6 +129,22 @@ export const validateCheckAccountExists = [
     .matches(/^0x[a-fA-F0-9]{40}$/)
     .withMessage('Invalid Ethereum address format'),
   
+  handleValidationErrors
+];
+
+// Login validation
+export const validateLogin = [
+  body('email')
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Invalid email format')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+
   handleValidationErrors
 ];
 

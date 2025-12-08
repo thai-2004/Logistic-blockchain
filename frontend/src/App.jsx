@@ -11,7 +11,6 @@ import './assets/styles/Toast.css';
 
 // Lazy load heavy components for performance
 const ModernDashboard = lazy(() => import('@components/ModernDashboard'));
-const OwnerDashboard = lazy(() => import('@components/OwnerDashboard'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -82,7 +81,7 @@ function App() {
             }
           />
 
-          {/* Protected Owner routes */}
+          {/* Protected Owner routes (reuse same dashboard) */}
           <Route
             path="/owner"
             element={
@@ -152,7 +151,7 @@ function CustomerDashboardWrapper({ initialTab = 'dashboard' }) {
     );
   }
 
-// Wrapper component for Owner Dashboard
+// Wrapper component for Owner (uses same ModernDashboard)
 function OwnerDashboardWrapper() {
   const { user, logout } = useAuth();
   const { tab } = useParams();
@@ -171,11 +170,11 @@ function OwnerDashboardWrapper() {
   };
 
     return (
-      <OwnerDashboard 
+      <ModernDashboard 
         user={user} 
-      onLogout={logout}
-      initialTab={getTabFromPath()}
-      onRouteChange={handleRouteChange}
+        onLogout={logout}
+        initialTab={getTabFromPath()}
+        onRouteChange={handleRouteChange}
       />
     );
   }

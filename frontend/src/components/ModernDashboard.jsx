@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import PropTypes from 'prop-types';
 import CreateShipment from '@components/CreateShipment';
 import ShipmentList from '@components/ShipmentList';
+import TrackShipment from '@components/TrackShipment';
 import '../assets/styles/ModernDashboard.css';
 import { useShipments } from '../hooks/useShipments';
 
@@ -259,12 +260,18 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
             <span className="nav-label">Analytics</span>
           </button>
           
-          <button className="nav-item">
+          <button 
+            className={`nav-item ${activeTab === 'track' ? 'active' : ''}`}
+            onClick={() => handleTabChange('track')}
+          >
             <span className="nav-icon">🔍</span>
             <span className="nav-label">Track Package</span>
           </button>
           
-          <button className="nav-item">
+          <button 
+            className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => handleTabChange('settings')}
+          >
             <span className="nav-icon">⚙️</span>
             <span className="nav-label">Settings</span>
           </button>
@@ -280,6 +287,8 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
               {activeTab === 'dashboard' && 'Dashboard'}
               {activeTab === 'shipments' && 'My Shipments'}
               {activeTab === 'analytics' && 'Analytics'}
+              {activeTab === 'track' && 'Track Package'}
+              {activeTab === 'settings' && 'Settings'}
             </h1>
           </div>
           
@@ -296,10 +305,10 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
                 <div className="user-avatar">
                   {user?.name?.charAt(0) || 'U'}
                 </div>
-                <div className="user-info">
-                  <div className="user-name">{user?.name || 'User'}</div>
-                  <div className="user-role">Customer</div>
-                </div>
+              <div className="user-info">
+                <div className="user-name">{user?.name || 'User'}</div>
+                <div className="user-role">{user?.role || 'User'}</div>
+              </div>
               </div>
               <button className="logout-btn" onClick={onLogout}>Logout</button>
             </div>
@@ -317,6 +326,17 @@ const ModernDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChan
                 user={user}
                 onShipmentCreated={handleShipmentCreated}
               />
+            )}
+            {activeTab === 'track' && (
+              <div className="track-wrapper">
+                <TrackShipment />
+              </div>
+            )}
+            {activeTab === 'settings' && (
+              <div className="settings-card">
+                <h2>Settings</h2>
+                <p>Module is coming soon. Liên hệ admin để cấu hình nâng cao.</p>
+              </div>
             )}
           </>
         </main>

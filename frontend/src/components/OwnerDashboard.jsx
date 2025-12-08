@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Dashboard from '@components/Dashboard';
 import TrackShipment from '@components/TrackShipment';
 import CreateShipment from '@components/CreateShipment';
 import UpdateShipment from '@components/UpdateShipment';

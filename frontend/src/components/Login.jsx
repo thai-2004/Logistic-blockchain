@@ -26,8 +26,8 @@ const Login = () => {
       password: {
         required: true,
         requiredMessage: 'Vui lòng nhập mật khẩu',
-        minLength: 6,
-        minLengthMessage: 'Mật khẩu phải có ít nhất 6 ký tự'
+        minLength: 8,
+        minLengthMessage: 'Mật khẩu phải có ít nhất 8 ký tự'
       }
     };
 

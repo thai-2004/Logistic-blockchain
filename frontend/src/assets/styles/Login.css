@@ -1,6 +1,9 @@
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: radial-gradient(circle at 18% 18%, rgba(255, 171, 64, 0.15), transparent 30%),
+              radial-gradient(circle at 82% 12%, rgba(76, 175, 80, 0.16), transparent 32%),
+              radial-gradient(circle at 50% 80%, rgba(255, 152, 0, 0.12), transparent 35%),
+              #0f1116;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,55 +12,20 @@
   overflow: hidden;
 }
 
-.login-container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.2) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-  animation: backgroundFloat 15s ease-in-out infinite;
-}
-
-@keyframes backgroundFloat {
-  0%, 100% { 
-    transform: translateX(0) translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  25% { 
-    transform: translateX(-10px) translateY(-5px) rotate(1deg);
-    opacity: 0.8;
-  }
-  50% { 
-    transform: translateX(10px) translateY(5px) rotate(0deg);
-    opacity: 0.9;
-  }
-  75% { 
-    transform: translateX(-5px) translateY(10px) rotate(-1deg);
-    opacity: 0.7;
-  }
-}
-
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 25px;
-  padding: 3.5rem;
+  background: rgba(20, 24, 30, 0.92);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 3.2rem;
   box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 25px 60px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.04);
   width: 100%;
   max-width: 480px;
-  color: #333;
+  color: #e9edf2;
   position: relative;
   z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   animation: cardEntrance 0.8s ease-out;
 }
 
@@ -99,41 +67,25 @@
 
 .login-logo .logo-icon {
   font-size: 3rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 15px;
-  padding: 0.75rem;
+  background: linear-gradient(135deg, #ff9f1c, #ff7b00);
+  border-radius: 14px;
+  padding: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-  animation: logoFloat 3s ease-in-out infinite;
-}
-
-@keyframes logoFloat {
-  0%, 100% { 
-    transform: translateY(0px) rotate(0deg);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-  }
-  50% { 
-    transform: translateY(-5px) rotate(2deg);
-    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-  }
+  box-shadow: 0 10px 25px rgba(255, 159, 28, 0.35);
 }
 
 .login-logo h1 {
   font-size: 2rem;
   font-weight: 800;
-  color: #333;
   margin: 0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fefefe;
 }
 
 .login-subtitle {
-  color: #666;
-  font-size: 1.1rem;
+  color: rgba(233, 237, 242, 0.75);
+  font-size: 1.05rem;
   margin: 0;
   font-weight: 500;
 }
@@ -158,7 +110,7 @@
 
 .error-message {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: #f87171;
   padding: 1rem 1.25rem;
   border-radius: 12px;
   display: flex;
@@ -188,39 +140,38 @@
 
 .form-group label {
   font-weight: 700;
-  color: #374151;
+  color: #e9edf2;
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
 }
 
 .form-group input,
 .form-group select {
-  padding: 1.25rem 1.5rem;
-  border: 2px solid rgba(102, 126, 234, 0.1);
+  padding: 1.15rem 1.3rem;
+  border: 2px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fefefe;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: #ff9f1c;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(255, 159, 28, 0.12);
   transform: translateY(-1px);
 }
 
 .form-group input::placeholder {
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.55);
   font-weight: 400;
 }
 
 .form-group small {
-  color: #6b7280;
+  color: rgba(233, 237, 242, 0.6);
   font-size: 0.8rem;
   margin-top: 0.5rem;
   font-weight: 500;
@@ -259,11 +210,11 @@
 }
 
 .login-submit-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
   color: white;
   border: none;
-  padding: 1.25rem 2rem;
-  font-size: 1.1rem;
+  padding: 1.2rem 2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   border-radius: 12px;
   cursor: pointer;
@@ -275,7 +226,7 @@
   margin-top: 1rem;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 28px rgba(76, 175, 80, 0.32);
 }
 
 .login-submit-btn::before {
@@ -353,7 +304,7 @@
 .toggle-btn {
   background: none;
   border: none;
-  color: #667eea;
+  color: #ff9f1c;
   cursor: pointer;
   font-weight: 700;
   text-decoration: underline;
@@ -369,14 +320,14 @@
 
 .back-to-home-btn {
   background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #ff9f1c;
+  border: 2px solid #ff9f1c;
   padding: 1rem 2rem;
-  border-radius: 25px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 1.5rem;
   width: 100%;
   position: relative;
@@ -399,10 +350,10 @@
 }
 
 .back-to-home-btn:hover {
-  background: #667eea;
-  color: white;
+  background: #ff9f1c;
+  color: #0f1116;
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 25px rgba(255, 159, 28, 0.3);
 }
 
 .back-to-home-btn:active {

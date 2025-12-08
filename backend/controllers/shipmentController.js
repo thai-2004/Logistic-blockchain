@@ -2,6 +2,31 @@ import { error } from "console";
 import { contract } from "../config/blockchain.js";
 import Shipment from "../models/shipmentModel.js";
 
+// Get shipment fee and settings
+export const getShipmentFee = async (req, res) => {
+  try {
+    const [feeEnabled, shipmentFee, collectedFees] = await Promise.all([
+      contract.feeEnabled(),
+      contract.shipmentFee(),
+      contract.getCollectedFees()
+    ]);
+
+    res.json({
+      success: true,
+      feeEnabled,
+      shipmentFee: shipmentFee.toString(),
+      shipmentFeeEth: Number(shipmentFee) / 1e18,
+      collectedFees: collectedFees.toString()
+    });
+  } catch (err) {
+    console.error("Get shipment fee error:", err);
+    res.status(500).json({
+      error: "Failed to fetch shipment fee",
+      message: err.message
+    });
+  }
+};
+
 
 export const getShipmentCount = async (req, res) => {
   try {
@@ -58,6 +83,8 @@ export const getAllShipments = async (req, res) => {
 };
 
 export const createShipment = async (req, res, next) => {
+  let receipt;
+  let shipmentId;
   try {
     const { productName, origin, destination, customer: customerFromBody } = req.body;
 
@@ -68,9 +95,25 @@ export const createShipment = async (req, res, next) => {
       });
     }
 
-    // Create shipment on blockchain
-    const tx = await contract.createShipment(productName, origin, destination);
-    const receipt = await tx.wait();
+    // Determine fee requirements
+    let txOverrides = {};
+    try {
+      const feeEnabled = await contract.feeEnabled();
+      if (feeEnabled) {
+        const shipmentFee = await contract.shipmentFee();
+        txOverrides = { value: shipmentFee };
+      }
+    } catch (feeErr) {
+      console.error("Failed to fetch fee settings:", feeErr);
+      return res.status(500).json({
+        error: "Cannot fetch shipment fee settings",
+        message: feeErr.message
+      });
+    }
+
+    // Create shipment on blockchain (includes fee when enabled)
+    const tx = await contract.createShipment(productName, origin, destination, txOverrides);
+    receipt = await tx.wait();
 
     // Parse event from transaction receipt
     const event = receipt.logs
@@ -89,7 +132,7 @@ export const createShipment = async (req, res, next) => {
       });
     }
 
-    const shipmentId = Number(event.args.id);
+    shipmentId = Number(event.args.id);
 
     // Check if shipmentId already exists in database
     const existingShipment = await Shipment.findOne({ shipmentId });
@@ -185,6 +228,17 @@ export const createShipment = async (req, res, next) => {
         details: err.keyPattern || err.keyValue
       });
     }
+
+    // If blockchain succeeded but DB failed, surface enough info for reconciliation
+    if (shipmentId && receipt) {
+      return res.status(500).json({
+        success: false,
+        error: "Database error after blockchain success",
+        message: err.message,
+        shipmentId,
+        blockchainTxHash: receipt.hash
+      });
+    }
     
     next(err);
   }
@@ -278,6 +332,7 @@ export const updateShipment = async (req, res) => {
 export const deleteShipment = async (req, res) => {
   try {
     const { id } = req.params;
+    const { reason } = req.body || {};
 
     // Validate shipment ID
     if (!id || isNaN(Number(id))) {
@@ -286,8 +341,15 @@ export const deleteShipment = async (req, res) => {
       });
     }
 
-    // Only delete from DB, not from blockchain
-    const result = await Shipment.findOneAndDelete({ shipmentId: Number(id) });
+    // Soft delete: mark as Cancelled to keep history aligned with blockchain
+    const result = await Shipment.findOneAndUpdate(
+      { shipmentId: Number(id) },
+      { 
+        status: "Cancelled",
+        ...(reason ? { notes: reason } : {})
+      },
+      { new: true, runValidators: true }
+    );
 
     if (!result) {
       return res.status(404).json({
@@ -298,7 +360,7 @@ export const deleteShipment = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Shipment deleted successfully",
+      message: "Shipment cancelled (soft delete); blockchain record retained",
       shipment: result
     });
   } catch (err) {

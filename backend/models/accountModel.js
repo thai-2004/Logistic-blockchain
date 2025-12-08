@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const accountSchema = new mongoose.Schema({
     address: { 
@@ -104,7 +105,20 @@ accountSchema.methods.updateLastLogin = function() {
 
 // Instance method to compare password
 accountSchema.methods.comparePassword = async function(candidatePassword) {
-    return candidatePassword === this.password; // Simple comparison for now
+    if (!this.password) return false;
+    return bcrypt.compare(candidatePassword, this.password);
 };
+
+// Hash password before saving when it is new or modified
+accountSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 export default mongoose.model("Account", accountSchema);

@@ -124,6 +124,9 @@ export const shipmentAPI = {
   
   // Get shipment count
   getShipmentCount: () => api.get('/shipments/count'),
+
+  // Get shipment fee settings
+  getShipmentFee: () => api.get('/shipments/fee'),
   
   // Cleanup duplicate shipments
   cleanupDuplicates: () => api.post('/shipments/cleanup-duplicates')

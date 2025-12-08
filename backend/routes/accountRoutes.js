@@ -22,7 +22,8 @@ import {
   validateDeleteAccount,
   validateCheckAccountExists,
   validateToggleAccountStatus,
-  validateGetAccountsByRole
+  validateGetAccountsByRole,
+  validateLogin
 } from "../validators/account.validator.js";
 
 const router = express.Router();
@@ -49,7 +50,7 @@ router.get("/role/:role", validateGetAccountsByRole, getAccountsByRole);
 router.post("/", validateCreateAccount, createAccount);
 
 // Route đăng nhập
-router.post("/login", login);
+router.post("/login", validateLogin, login);
 
 // Route lấy account theo ID
 router.get("/:id", validateGetAccountById, getAccountById);

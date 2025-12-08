@@ -3,9 +3,11 @@ import { shipmentAPI } from '../services/api';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../contexts/ToastContext';
 import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
 
 const CreateShipment = ({ user, onShipmentCreated }) => {
   const toast = useToast();
+  const [feeInfo, setFeeInfo] = useState({ loading: true, feeEnabled: false, feeEth: null });
 
   // Validation rules
   const validationRules = useMemo(() => ({
@@ -41,6 +43,32 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
     destination: ''
   }), []);
 
+  // Fetch fee info (with manual refresh support)
+  useEffect(() => {
+    refreshFee();
+  }, []);
+
+  const refreshFee = async () => {
+    let active = true;
+    setFeeInfo((prev) => ({ ...prev, loading: true }));
+    try {
+      const res = await shipmentAPI.getShipmentFee();
+      if (!active) return;
+      const feeEnabled = !!res.data.feeEnabled;
+      const feeEth = typeof res.data.shipmentFeeEth === 'number'
+        ? res.data.shipmentFeeEth
+        : Number(res.data.shipmentFee) / 1e18;
+      // format to 6 decimals for display
+      const feeEthDisplay = feeEth != null ? Number(feeEth).toFixed(6) : null;
+      setFeeInfo({ loading: false, feeEnabled, feeEth: feeEthDisplay });
+    } catch (err) {
+      if (!active) return;
+      console.error('Fetch shipment fee error:', err);
+      setFeeInfo({ loading: false, feeEnabled: false, feeEth: null });
+    }
+    return () => { active = false; };
+  };
+
   const onSubmit = async (values) => {
     try {
       const payload = {
@@ -64,6 +92,7 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
     } catch (err) {
       const status = err.response?.status;
       const data = err.response?.data;
+      const rawMessage = data?.message || data?.error || err.message;
 
       // Handle 200 response (duplicate transaction but same shipment)
       if (status === 200 && data?.isDuplicate) {
@@ -100,8 +129,16 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
         // User should check the existing shipment or contact admin
         return;
       } else {
-        // For other errors, show error message
-        const errorMessage = data?.message || data?.error || 'Failed to create shipment';
+        // For other errors, show detailed message
+        let errorMessage = rawMessage || 'Failed to create shipment';
+
+        // Fee-related hints for local deploy
+        if (rawMessage?.toLowerCase().includes('insufficient funds')) {
+          errorMessage = 'Ví backend không đủ ETH để trả phí shipment. Nạp thêm ETH cho PRIVATE_KEY trong .env.';
+        } else if (rawMessage?.toLowerCase().includes('cannot fetch shipment fee settings')) {
+          errorMessage = 'Không lấy được fee từ smart contract. Kiểm tra RPC/contract address.';
+        }
+
         toast.error(errorMessage);
         console.error('Create shipment error:', err);
         throw err; // Re-throw to prevent form reset on error
@@ -125,6 +162,22 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
       <div className="form-header">
         <h2>🚛 Tạo Shipment Mới</h2>
         <p className="form-subtitle">Tạo lô hàng mới trên blockchain</p>
+        <p className="form-subtitle" style={{ marginTop: '6px', fontSize: '13px' }}>
+          {feeInfo.loading
+            ? 'Đang tải phí tạo shipment...'
+            : feeInfo.feeEnabled
+              ? `Phí tạo shipment hiện tại: ${feeInfo.feeEth ?? '?'} ETH`
+              : 'Hiện tại không thu phí tạo shipment'}
+          <button
+            type="button"
+            onClick={refreshFee}
+            disabled={feeInfo.loading}
+            style={{ marginLeft: '8px', fontSize: '12px' }}
+            className="btn btn-secondary"
+          >
+            Làm mới phí
+          </button>
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="create-form">

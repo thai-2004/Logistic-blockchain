@@ -1,4 +1,4 @@
-import { error } from "console";
+import jwt from "jsonwebtoken";
 import { contract } from "../config/blockchain.js";
 import Account from "../models/accountModel.js";
 
@@ -556,6 +556,25 @@ export const login = async (req, res) => {
     // Update last login
     await account.updateLastLogin();
 
+    // Sign JWT
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("JWT_SECRET is missing in environment");
+      return res.status(500).json({
+        error: "Authentication misconfigured"
+      });
+    }
+    const token = jwt.sign(
+      {
+        id: account._id,
+        role: account.role,
+        address: account.address,
+        email: account.email
+      },
+      jwtSecret,
+      { expiresIn: "1h" }
+    );
+
     // Return account without password
     const accountData = account.toObject();
     delete accountData.password;
@@ -563,6 +582,7 @@ export const login = async (req, res) => {
     res.json({
       success: true,
       message: "Login successful",
+      token,
       account: accountData
     });
   } catch (error) {

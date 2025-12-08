@@ -11,7 +11,8 @@ import {
   getShipmentsByStatus,
   searchShipments,
   getShipmentTracking,
-  cleanupDuplicates
+  cleanupDuplicates,
+  getShipmentFee
 } from "../controllers/shipmentController.js";
 import { createAccount } from "../controllers/accountController.js";
 import {
@@ -32,6 +33,9 @@ const router = express.Router();
 
 // Route lấy tất cả shipments với pagination và filter
 router.get("/", validateGetAllShipments, getAllShipments);
+
+// Route lấy phí shipment và trạng thái fee
+router.get("/fee", getShipmentFee);
 
 // Route lấy số lượng shipments từ blockchain
 router.get("/count", getShipmentCount);
