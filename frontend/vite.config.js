@@ -7,6 +7,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@components': '/src/components',
+      '@features': '/src/features',
+      '@app': '/src/app',
+      '@services': '/src/services',
+      '@shared': '/src/shared',
+      '@hooks': '/src/hooks',
+      '@contexts': '/src/contexts',
     },
   },
   server: {

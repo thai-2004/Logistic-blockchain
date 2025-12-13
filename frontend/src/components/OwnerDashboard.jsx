@@ -6,7 +6,8 @@ import UpdateShipment from '@components/UpdateShipment';
 import ShipmentList from '@components/ShipmentList';
 import ShipperPanel from '@components/ShipperPanel';
 import LiveCheckpointMap from '@components/LiveCheckpointMap';
-import { shipmentAPI } from '../services/api';
+import { shipmentAPI } from '@services/api';
+import { getStatusColor } from '@shared/constants/status';
 import '../assets/styles/ModernOwnerDashboard.css';
 
 const OwnerDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChange }) => {
@@ -69,15 +70,6 @@ const OwnerDashboard = ({ user, onLogout, initialTab = 'dashboard', onRouteChang
     // Refresh dashboard data when new shipment is created
     if (activeTab === 'dashboard') {
       fetchDashboardData();
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Hoàn thành': return '#10B981';
-      case 'Đang vận chuyển': return '#F59E0B';
-      case 'Đang xử lý': return '#3B82F6';
-      default: return '#6B7280';
     }
   };
 

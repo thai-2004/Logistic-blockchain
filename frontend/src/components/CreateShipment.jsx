@@ -1,9 +1,10 @@
 import React, { useMemo, memo } from 'react';
-import { shipmentAPI } from '../services/api';
-import { useForm } from '../hooks/useForm';
-import { useToast } from '../contexts/ToastContext';
+import { shipmentAPI } from '@services/api';
+import { useForm } from '@hooks/useForm';
+import { useToast } from '@contexts/ToastContext';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
+import { Truck, Package, MapPin, Loader2, RefreshCw, Plus } from 'lucide-react';
 
 const CreateShipment = ({ user, onShipmentCreated }) => {
   const toast = useToast();
@@ -158,107 +159,154 @@ const CreateShipment = ({ user, onShipmentCreated }) => {
   } = useForm(initialValues, validationRules, onSubmit);
 
   return (
-    <div className="create-shipment">
-      <div className="form-header">
-        <h2>🚛 Tạo Shipment Mới</h2>
-        <p className="form-subtitle">Tạo lô hàng mới trên blockchain</p>
-        <p className="form-subtitle" style={{ marginTop: '6px', fontSize: '13px' }}>
-          {feeInfo.loading
-            ? 'Đang tải phí tạo shipment...'
-            : feeInfo.feeEnabled
-              ? `Phí tạo shipment hiện tại: ${feeInfo.feeEth ?? '?'} ETH`
-              : 'Hiện tại không thu phí tạo shipment'}
-          <button
-            type="button"
-            onClick={refreshFee}
-            disabled={feeInfo.loading}
-            style={{ marginLeft: '8px', fontSize: '12px' }}
-            className="btn btn-secondary"
-          >
-            Làm mới phí
-          </button>
-        </p>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-3 mb-4">
+          <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] p-3 rounded-lg">
+            <Plus className="w-6 h-6 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-100">Tạo Shipment Mới</h2>
+        </div>
+        <p className="text-gray-400 mb-4">Tạo lô hàng mới trên blockchain</p>
+        
+        {/* Fee Info */}
+        <div className="bg-[#0f1116] border border-[#1e2329] rounded-xl p-4 inline-flex items-center gap-3">
+          {feeInfo.loading ? (
+            <>
+              <Loader2 className="w-4 h-4 text-[#f3ba2f] animate-spin" />
+              <span className="text-sm text-gray-400">Đang tải phí tạo shipment...</span>
+            </>
+          ) : (
+            <>
+              <Package className="w-4 h-4 text-[#f3ba2f]" />
+              <span className="text-sm text-gray-400">
+                {feeInfo.feeEnabled
+                  ? `Phí tạo shipment: ${feeInfo.feeEth ?? '?'} ETH`
+                  : 'Hiện tại không thu phí tạo shipment'}
+              </span>
+              <button
+                type="button"
+                onClick={refreshFee}
+                disabled={feeInfo.loading}
+                className="ml-2 px-3 py-1 text-xs bg-[#0b0e11] border border-[#1e2329] rounded-lg text-gray-300 hover:text-[#f3ba2f] hover:border-[#f3ba2f] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                <RefreshCw className={`w-3 h-3 ${feeInfo.loading ? 'animate-spin' : ''}`} />
+                Làm mới
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="create-form">
-        <div className="form-group">
-          <label htmlFor="productName">Tên sản phẩm *</label>
-          <input
-            type="text"
-            id="productName"
-            name="productName"
-            value={values.productName}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Nhập tên sản phẩm"
-            className={`form-input ${touched.productName && errors.productName ? 'error' : ''}`}
-          />
-          {touched.productName && errors.productName && (
-            <span className="error-text">{errors.productName}</span>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="origin">Điểm xuất phát *</label>
-          <input
-            type="text"
-            id="origin"
-            name="origin"
-            value={values.origin}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Nhập điểm xuất phát"
-            className={`form-input ${touched.origin && errors.origin ? 'error' : ''}`}
-          />
-          {touched.origin && errors.origin && (
-            <span className="error-text">{errors.origin}</span>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="destination">Điểm đến *</label>
-          <input
-            type="text"
-            id="destination"
-            name="destination"
-            value={values.destination}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Nhập điểm đến"
-            className={`form-input ${touched.destination && errors.destination ? 'error' : ''}`}
-          />
-          {touched.destination && errors.destination && (
-            <span className="error-text">{errors.destination}</span>
-          )}
-        </div>
-
-        <div className="form-actions">
-          <button 
-            type="button" 
-            onClick={reset}
-            className="btn btn-secondary"
-            disabled={isSubmitting}
-          >
-            Reset
-          </button>
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="btn btn-primary"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="loading-spinner-small"></span>
-                Đang tạo...
-              </>
-            ) : (
-              <>
-                🚛 Tạo Shipment
-              </>
+      {/* Form Card */}
+      <div className="bg-[#0f1116] border border-[#1e2329] rounded-xl p-6 shadow-xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Product Name */}
+          <div>
+            <label htmlFor="productName" className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <Package className="w-4 h-4" />
+              Tên sản phẩm <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              id="productName"
+              name="productName"
+              value={values.productName}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Nhập tên sản phẩm"
+              className={`w-full px-4 py-3 bg-[#0b0e11] border rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                touched.productName && errors.productName
+                  ? 'border-red-500 focus:ring-red-500/50'
+                  : 'border-[#1e2329] focus:border-[#f3ba2f] focus:ring-[#f3ba2f]/50'
+              }`}
+            />
+            {touched.productName && errors.productName && (
+              <p className="mt-1 text-sm text-red-400">{errors.productName}</p>
             )}
-          </button>
-        </div>
-      </form>
+          </div>
+
+          {/* Origin */}
+          <div>
+            <label htmlFor="origin" className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <MapPin className="w-4 h-4" />
+              Điểm xuất phát <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              id="origin"
+              name="origin"
+              value={values.origin}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Nhập điểm xuất phát"
+              className={`w-full px-4 py-3 bg-[#0b0e11] border rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                touched.origin && errors.origin
+                  ? 'border-red-500 focus:ring-red-500/50'
+                  : 'border-[#1e2329] focus:border-[#f3ba2f] focus:ring-[#f3ba2f]/50'
+              }`}
+            />
+            {touched.origin && errors.origin && (
+              <p className="mt-1 text-sm text-red-400">{errors.origin}</p>
+            )}
+          </div>
+
+          {/* Destination */}
+          <div>
+            <label htmlFor="destination" className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+              <MapPin className="w-4 h-4" />
+              Điểm đến <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              id="destination"
+              name="destination"
+              value={values.destination}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Nhập điểm đến"
+              className={`w-full px-4 py-3 bg-[#0b0e11] border rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                touched.destination && errors.destination
+                  ? 'border-red-500 focus:ring-red-500/50'
+                  : 'border-[#1e2329] focus:border-[#f3ba2f] focus:ring-[#f3ba2f]/50'
+              }`}
+            />
+            {touched.destination && errors.destination && (
+              <p className="mt-1 text-sm text-red-400">{errors.destination}</p>
+            )}
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-4 pt-4 border-t border-[#1e2329]">
+            <button
+              type="button"
+              onClick={reset}
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-[#0b0e11] border border-[#1e2329] text-gray-300 rounded-lg font-medium hover:border-[#f3ba2f] hover:text-[#f3ba2f] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Reset
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white rounded-lg font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                <>
+                  <Truck className="w-5 h-5" />
+                  Tạo Shipment
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

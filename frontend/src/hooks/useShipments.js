@@ -1,100 +1,103 @@
 // frontend/src/hooks/useShipments.js
-import { useState, useEffect } from 'react';
-import { shipmentAPI } from '../services/api';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { shipmentAPI } from '@services/api';
 
 export const useShipments = (params = {}) => {
-  const [shipments, setShipments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({});
+  const normalizedParams = useMemo(() => {
+    const cleaned = { ...params };
+    if (cleaned.status === '') {
+      delete cleaned.status;
+    }
+    if (cleaned.customer) {
+      cleaned.customer =
+        typeof cleaned.customer === 'string'
+          ? cleaned.customer.toLowerCase()
+          : cleaned.customer;
+    }
+    return cleaned;
+  }, [params]);
 
-  const fetchShipments = async (newParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Filter out empty status parameter
-      const filteredParams = { ...params, ...newParams };
-      if (filteredParams.status === '') {
-        delete filteredParams.status;
-      }
-
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['shipments', normalizedParams],
+    queryFn: async () => {
+      const filteredParams = normalizedParams;
       let response;
       if (filteredParams.customer) {
         const { customer, ...rest } = filteredParams;
-        const normalizedCustomer = typeof customer === 'string' ? customer.toLowerCase() : customer;
-        response = await shipmentAPI.getShipmentsByCustomer(normalizedCustomer, rest);
+        response = await shipmentAPI.getShipmentsByCustomer(customer, rest);
       } else {
         response = await shipmentAPI.getAllShipments(filteredParams);
       }
-      setShipments(response.data.shipments);
-      setPagination(response.data.pagination);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch shipments');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchShipments();
-  }, []);
+      return {
+        shipments: response.data.shipments || [],
+        pagination: response.data.pagination || {},
+      };
+    },
+    staleTime: 60 * 1000,
+    keepPreviousData: true,
+  });
 
   return {
-    shipments,
-    loading,
-    error,
-    pagination,
-    refetch: fetchShipments
+    shipments: data?.shipments || [],
+    pagination: data?.pagination || {},
+    loading: isLoading || isFetching,
+    error: error ? (error.response?.data?.error || error.message) : null,
+    refetch,
   };
 };
 
 export const useShipment = (id) => {
-  const [shipment, setShipment] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchShipment = async () => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-    try {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    enabled: !!id,
+    queryKey: ['shipment', id],
+    queryFn: async () => {
       const response = await shipmentAPI.getShipment(id);
-      setShipment(response.data.shipment);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch shipment');
-    } finally {
-      setLoading(false);
-    }
+      return response.data.shipment;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  return {
+    shipment: data || null,
+    loading: isLoading || isFetching,
+    error: error ? (error.response?.data?.error || error.message) : null,
+    refetch,
   };
-
-  useEffect(() => {
-    fetchShipment();
-  }, [id]);
-
-  return { shipment, loading, error, refetch: fetchShipment };
 };
 
 export const useShipmentStats = (period = 'all') => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchStats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['shipment-stats', period],
+    queryFn: async () => {
       const response = await shipmentAPI.getStats(period);
-      setStats(response.data.stats);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch stats');
-    } finally {
-      setLoading(false);
-    }
+      return response.data.stats;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  return {
+    stats: data || null,
+    loading: isLoading || isFetching,
+    error: error ? (error.response?.data?.error || error.message) : null,
+    refetch,
   };
-
-  useEffect(() => {
-    fetchStats();
-  }, [period]);
-
-  return { stats, loading, error, refetch: fetchStats };
 };

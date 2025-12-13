@@ -187,8 +187,15 @@ export const useForm = (initialValues = {}, validationRules = {}, onSubmit = nul
       try {
         await onSubmit(values);
       } catch (error) {
-        console.error('Form submission error:', error);
-        throw error;
+        // Only log non-409 errors (409 is expected for conflicts like duplicate email/shipment)
+        if (error.response?.status !== 409) {
+          console.error('Form submission error:', error);
+        }
+        // Don't throw 409 errors - they're handled gracefully by components
+        // Other errors are still thrown for proper error handling
+        if (error.response?.status !== 409) {
+          throw error;
+        }
       } finally {
         setIsSubmitting(false);
       }

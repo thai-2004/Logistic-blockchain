@@ -38,11 +38,13 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    // For 409 Conflict, we'll let the component handle it gracefully
-    // Don't log it as an error since it's expected behavior
+    // For 409 Conflict, mark it as handled to prevent unnecessary logging
+    // This is expected behavior (duplicate email/address, etc.)
+    // Components will handle it gracefully with user-friendly messages
     if (error.response?.status === 409) {
-      // Return the error but don't treat it as a critical failure
-      // The component will handle it appropriately
+      // Mark error as expected/handled
+      error.isExpected = true;
+      // Don't log to console - component will show toast message
     }
     return Promise.reject(error);
   }

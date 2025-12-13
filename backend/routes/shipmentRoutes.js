@@ -12,7 +12,8 @@ import {
   searchShipments,
   getShipmentTracking,
   cleanupDuplicates,
-  getShipmentFee
+  getShipmentFee,
+  getBlockHashes
 } from "../controllers/shipmentController.js";
 import { createAccount } from "../controllers/accountController.js";
 import {
@@ -36,6 +37,9 @@ router.get("/", validateGetAllShipments, getAllShipments);
 
 // Route lấy phí shipment và trạng thái fee
 router.get("/fee", getShipmentFee);
+
+// Route lấy block hash của tất cả shipments
+router.get("/blocks", getBlockHashes);
 
 // Route lấy số lượng shipments từ blockchain
 router.get("/count", getShipmentCount);

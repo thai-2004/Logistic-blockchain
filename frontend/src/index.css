@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 font-sans antialiased;
+}
+
+#root {
+  @apply min-h-screen;
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, #6a75ff, #8e61ff);
+}
+
+.btn-primary {
+  @apply inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 font-semibold text-slate-950 transition shadow-lg shadow-brand-primary/30;
+}
+
+.btn-primary:hover {
+  @apply scale-[1.01] shadow-brand-primary/40;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center gap-2 rounded-xl border border-brand-border px-3 py-2 text-slate-100 transition bg-transparent hover:bg-brand-border/30;
+}
+
+.card-panel {
+  @apply rounded-2xl border border-brand-border bg-brand-panel shadow-panel;
+}
+

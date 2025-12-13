@@ -57,6 +57,13 @@ const shipmentSchema = new mongoose.Schema(
     blockchainTxHash: {
       type: String,
       trim: true
+    },
+    blockchainBlockHash: {
+      type: String,
+      trim: true
+    },
+    blockchainBlockNumber: {
+      type: Number
     }
   },
   { 

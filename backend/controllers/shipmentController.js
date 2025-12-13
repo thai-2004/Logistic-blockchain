@@ -174,7 +174,9 @@ export const createShipment = async (req, res, next) => {
       destination,
       status: "Created",
       customer: (customerFromBody || receipt.from || '').toLowerCase(),
-      blockchainTxHash: receipt.hash
+      blockchainTxHash: receipt.hash,
+      blockchainBlockHash: receipt.blockHash,
+      blockchainBlockNumber: receipt.blockNumber
     });
 
     res.status(201).json({ 
@@ -236,7 +238,9 @@ export const createShipment = async (req, res, next) => {
         error: "Database error after blockchain success",
         message: err.message,
         shipmentId,
-        blockchainTxHash: receipt.hash
+        blockchainTxHash: receipt.hash,
+        blockchainBlockHash: receipt.blockHash,
+        blockchainBlockNumber: receipt.blockNumber
       });
     }
     
@@ -763,12 +767,44 @@ export const getShipmentTracking = async (req, res) => {
         manager: shipment.manager,
         driverName: shipment.driverName,
         vehiclePlate: shipment.vehiclePlate,
-        blockchainTxHash: shipment.blockchainTxHash
+        blockchainTxHash: shipment.blockchainTxHash,
+        blockchainBlockHash: shipment.blockchainBlockHash,
+        blockchainBlockNumber: shipment.blockchainBlockNumber
       },
       timeline
     });
   } catch (error) {
     console.error("Get shipment tracking error:", error);
+    res.status(500).json({
+      error: "Server error",
+      message: error.message
+    });
+  }
+};
+
+// Get block hash information for all shipments
+export const getBlockHashes = async (req, res) => {
+  try {
+    const shipments = await Shipment.find({})
+      .select('shipmentId productName blockchainTxHash blockchainBlockHash blockchainBlockNumber createdAt')
+      .sort({ blockchainBlockNumber: -1 });
+
+    const blockHashes = shipments.map(shipment => ({
+      shipmentId: shipment.shipmentId,
+      productName: shipment.productName,
+      transactionHash: shipment.blockchainTxHash,
+      blockHash: shipment.blockchainBlockHash,
+      blockNumber: shipment.blockchainBlockNumber,
+      createdAt: shipment.createdAt
+    }));
+
+    res.json({
+      success: true,
+      count: blockHashes.length,
+      blockHashes
+    });
+  } catch (error) {
+    console.error("Get block hashes error:", error);
     res.status(500).json({
       error: "Server error",
       message: error.message

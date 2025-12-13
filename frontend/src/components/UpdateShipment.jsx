@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { shipmentAPI } from '../services/api';
+import { shipmentAPI } from '@services/api';
 
 const UpdateShipment = ({ shipmentId, onUpdate, onClose }) => {
   const [searchId, setSearchId] = useState(shipmentId || '');
